@@ -109,6 +109,14 @@ python3 -m sde_bench cross-benchmark \
   --md-out reports/public_benchmarks/cross_benchmark_matrix.md
 ```
 
+Public synthetic dataset survey:
+
+```bash
+python3 -m sde_bench dataset-survey \
+  --json-out reports/public_benchmarks/domain_dataset_survey.json \
+  --md-out reports/public_benchmarks/domain_dataset_survey.md
+```
+
 ## Python API
 
 ```python

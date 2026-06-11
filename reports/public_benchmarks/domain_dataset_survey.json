@@ -1,0 +1,217 @@
+{
+  "schema_version": "0.1.0",
+  "selection_policy": [
+    "Keep medical datasets as the primary evidence tier.",
+    "Add finance and science datasets only when the native files can be mapped to JSON/JSONL/CSV records.",
+    "Preserve each original paper benchmark separately from SDE-Bench common-axis evaluation.",
+    "Report candidate cells as not_applicable or requires_adapter until an adapter and command exist."
+  ],
+  "domain_counts": {
+    "finance": 3,
+    "medical": 7,
+    "science": 3
+  },
+  "evaluated_datasets": [
+    {
+      "dataset_id": "kmuc_patient_cases_lay",
+      "domain": "medical",
+      "name": "KMUC synthetic lay cases",
+      "status": "evaluated",
+      "source_url": "local KMUC release",
+      "current_report": "reports/kmuc_sde_report.md",
+      "sde_bench_plan": "baseline local LLM/RAG medical dataset"
+    },
+    {
+      "dataset_id": "medsynth_dialogue_note",
+      "domain": "medical",
+      "name": "MedSynth",
+      "status": "evaluated",
+      "source_url": "https://arxiv.org/abs/2508.01401",
+      "current_report": "reports/public_benchmarks/medsynth/report.md",
+      "sde_bench_plan": "dialogue-note text-pair medical benchmark"
+    },
+    {
+      "dataset_id": "simsum_respiratory",
+      "domain": "medical",
+      "name": "SimSUM",
+      "status": "evaluated",
+      "source_url": "https://arxiv.org/abs/2409.08936",
+      "current_report": "reports/public_benchmarks/simsum/report.md",
+      "sde_bench_plan": "respiratory structured-plus-note benchmark"
+    },
+    {
+      "dataset_id": "synthea_ehr_sample",
+      "domain": "medical",
+      "name": "Synthea sample EHR",
+      "status": "evaluated",
+      "source_url": "https://synthea.mitre.org/downloads",
+      "current_report": "reports/public_benchmarks/synthea/report.md",
+      "sde_bench_plan": "structured EHR interoperability benchmark"
+    }
+  ],
+  "candidate_datasets": [
+    {
+      "dataset_id": "health_gym_icu",
+      "domain": "medical",
+      "name": "Health Gym ICU/HIV synthetic health datasets",
+      "status": "next_batch",
+      "priority": "P0",
+      "source_url": "https://arxiv.org/abs/2203.06369",
+      "public_artifact": "https://github.com/NicKuo-ResearchStuff/Health_Gym_AI",
+      "native_format": "longitudinal tabular time series",
+      "original_metric": "offline RL task utility, distribution/correlation similarity, disclosure risk",
+      "sde_bench_plan": "map patient trajectories to per-visit records; evaluate fidelity, privacy, diversity, validity, and structured temporal traceability",
+      "adapter_work": "flatten ICU/HIV trajectories into JSONL with patient_id, time, vitals/labs/actions/outcomes",
+      "why": "closest medical addition after Synthea because it is public, synthetic, longitudinal, and benchmark-oriented."
+    },
+    {
+      "dataset_id": "de_synpuf_claims",
+      "domain": "medical",
+      "name": "CMS DE-SynPUF claims",
+      "status": "candidate",
+      "priority": "P1",
+      "source_url": "https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files",
+      "native_format": "claims tables",
+      "original_metric": "claims analytic usefulness and privacy-preserving public release",
+      "sde_bench_plan": "map beneficiary, diagnosis, procedure, and claim tables to encounter records",
+      "adapter_work": "claims parser plus ICD/procedure field normalization",
+      "why": "useful for claims-style medical synthetic data, but larger and less LLM/RAG-like than KMUC."
+    },
+    {
+      "dataset_id": "sm3_text_to_query",
+      "domain": "medical",
+      "name": "SM3-Text-to-Query",
+      "status": "candidate",
+      "priority": "P1",
+      "source_url": "https://arxiv.org/abs/2411.05521",
+      "native_format": "synthetic Synthea-derived database plus natural-language query pairs",
+      "original_metric": "text-to-query execution accuracy across SQL, MQL, Cypher, and SPARQL",
+      "sde_bench_plan": "evaluate generated patient records separately from query-pair utility",
+      "adapter_work": "extract patient tables from database dumps; keep query-pair task as original-benchmark family",
+      "why": "medical and synthetic, but the native benchmark targets text-to-query systems rather than dataset quality alone."
+    },
+    {
+      "dataset_id": "fifar_fraud_l2d",
+      "domain": "finance",
+      "name": "FiFAR financial fraud alert review dataset",
+      "status": "next_batch",
+      "priority": "P0",
+      "source_url": "https://arxiv.org/abs/2312.13218",
+      "public_artifact": "https://github.com/feedzai/fifar-dataset",
+      "native_format": "tabular fraud alerts plus synthetic analyst predictions",
+      "original_metric": "learning-to-defer assignment utility under capacity constraints",
+      "sde_bench_plan": "evaluate tabular fidelity/diversity/privacy with fraud label utility; report domain as finance",
+      "adapter_work": "generic CSV/Parquet loader plus target=is_fraud and optional sensitive/workload columns",
+      "why": "small enough to adapt and useful as a non-medical, high-stakes synthetic decision dataset."
+    },
+    {
+      "dataset_id": "synthaml_transactions",
+      "domain": "finance",
+      "name": "Synthetic AML transaction datasets",
+      "status": "candidate",
+      "priority": "P1",
+      "source_url": "https://arxiv.org/abs/2306.16424",
+      "native_format": "transaction graph/table",
+      "original_metric": "AML detection utility and transaction realism",
+      "sde_bench_plan": "evaluate transaction-level fidelity/diversity/privacy and label utility; add graph metrics later",
+      "adapter_work": "sample transaction tables; normalize account, amount, timestamp, label, and typology fields",
+      "why": "strong finance benchmark candidate, but graph/transaction scale makes it a second batch item."
+    },
+    {
+      "dataset_id": "transxion_aml",
+      "domain": "finance",
+      "name": "TransXion AML benchmark",
+      "status": "candidate",
+      "priority": "P2",
+      "source_url": "https://arxiv.org/abs/2604.17420",
+      "public_artifact": "https://github.com/chaos-max/TransXion",
+      "native_format": "transaction graph with entity profiles",
+      "original_metric": "AML detection performance plus graph/profile realism",
+      "sde_bench_plan": "evaluate only sampled tabular projections until graph-specific axes exist",
+      "adapter_work": "graph-to-record projection and network metric extension",
+      "why": "recent and public, but broader than the current tabular/text SDE-Bench core."
+    },
+    {
+      "dataset_id": "syntren_gene_expression",
+      "domain": "science",
+      "name": "SynTReN synthetic gene expression generator",
+      "status": "next_batch",
+      "priority": "P0",
+      "source_url": "https://doi.org/10.1186/1471-2105-7-43",
+      "native_format": "gene expression matrices with known regulatory structure",
+      "original_metric": "network structure recovery and expression realism",
+      "sde_bench_plan": "treat genes as numeric features and pathways/classes as labels when available",
+      "adapter_work": "matrix-to-record converter with sample_id, gene_* numeric columns, and optional class/condition label",
+      "why": "classic synthetic science dataset where ground-truth structure is part of the benchmark value."
+    },
+    {
+      "dataset_id": "synthetic_spectra",
+      "domain": "science",
+      "name": "Universal synthetic spectroscopic dataset",
+      "status": "candidate",
+      "priority": "P1",
+      "source_url": "https://arxiv.org/abs/2206.06031",
+      "native_format": "synthetic spectra and class labels",
+      "original_metric": "spectra classification accuracy across model families",
+      "sde_bench_plan": "evaluate numeric vector fidelity/diversity/privacy and class-label utility",
+      "adapter_work": "spectra vector loader; optionally downsample peaks to fixed-width JSONL features",
+      "why": "science-domain synthetic benchmark with clear labels, but less medically relevant."
+    },
+    {
+      "dataset_id": "superbench_sciml",
+      "domain": "science",
+      "name": "SuperBench scientific ML super-resolution datasets",
+      "status": "candidate",
+      "priority": "P2",
+      "source_url": "https://arxiv.org/abs/2306.14070",
+      "native_format": "large spatiotemporal simulation arrays",
+      "original_metric": "super-resolution quality and physics-preservation metrics",
+      "sde_bench_plan": "out of current JSONL/tabular scope except metadata-level sampling",
+      "adapter_work": "requires array/image adapter and physics-specific axes",
+      "why": "topical SciML benchmark, but not a near-term fit for SDE-Bench tabular/text evaluation."
+    }
+  ],
+  "next_batch": [
+    {
+      "dataset_id": "health_gym_icu",
+      "domain": "medical",
+      "name": "Health Gym ICU/HIV synthetic health datasets",
+      "status": "next_batch",
+      "priority": "P0",
+      "source_url": "https://arxiv.org/abs/2203.06369",
+      "public_artifact": "https://github.com/NicKuo-ResearchStuff/Health_Gym_AI",
+      "native_format": "longitudinal tabular time series",
+      "original_metric": "offline RL task utility, distribution/correlation similarity, disclosure risk",
+      "sde_bench_plan": "map patient trajectories to per-visit records; evaluate fidelity, privacy, diversity, validity, and structured temporal traceability",
+      "adapter_work": "flatten ICU/HIV trajectories into JSONL with patient_id, time, vitals/labs/actions/outcomes",
+      "why": "closest medical addition after Synthea because it is public, synthetic, longitudinal, and benchmark-oriented."
+    },
+    {
+      "dataset_id": "fifar_fraud_l2d",
+      "domain": "finance",
+      "name": "FiFAR financial fraud alert review dataset",
+      "status": "next_batch",
+      "priority": "P0",
+      "source_url": "https://arxiv.org/abs/2312.13218",
+      "public_artifact": "https://github.com/feedzai/fifar-dataset",
+      "native_format": "tabular fraud alerts plus synthetic analyst predictions",
+      "original_metric": "learning-to-defer assignment utility under capacity constraints",
+      "sde_bench_plan": "evaluate tabular fidelity/diversity/privacy with fraud label utility; report domain as finance",
+      "adapter_work": "generic CSV/Parquet loader plus target=is_fraud and optional sensitive/workload columns",
+      "why": "small enough to adapt and useful as a non-medical, high-stakes synthetic decision dataset."
+    },
+    {
+      "dataset_id": "syntren_gene_expression",
+      "domain": "science",
+      "name": "SynTReN synthetic gene expression generator",
+      "status": "next_batch",
+      "priority": "P0",
+      "source_url": "https://doi.org/10.1186/1471-2105-7-43",
+      "native_format": "gene expression matrices with known regulatory structure",
+      "original_metric": "network structure recovery and expression realism",
+      "sde_bench_plan": "treat genes as numeric features and pathways/classes as labels when available",
+      "adapter_work": "matrix-to-record converter with sample_id, gene_* numeric columns, and optional class/condition label",
+      "why": "classic synthetic science dataset where ground-truth structure is part of the benchmark value."
+    }
+  ]
+}

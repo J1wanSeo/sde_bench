@@ -11,6 +11,7 @@ from sde_bench.adapters.kmuc import export_kmuc_records
 from sde_bench.adapters.medsynth import export_medsynth_records
 from sde_bench.adapters.synthea import export_synthea_records
 from sde_bench.adapters.synsum import export_synsum_records
+from sde_bench.domain_datasets import build_domain_survey, markdown_domain_survey
 from sde_bench.original_benchmarks import build_cross_benchmark_report, markdown_cross_benchmark
 
 
@@ -437,6 +438,46 @@ class SdeBenchCoreTests(unittest.TestCase):
 
 
 class SdeBenchCliTests(unittest.TestCase):
+    def test_domain_survey_prioritizes_medical_and_cross_domain_candidates(self) -> None:
+        survey = build_domain_survey()
+        rendered = markdown_domain_survey(survey)
+
+        self.assertEqual(survey["schema_version"], "0.1.0")
+        self.assertGreaterEqual(survey["domain_counts"]["medical"], 5)
+        self.assertIn("finance", survey["domain_counts"])
+        self.assertIn("science", survey["domain_counts"])
+        self.assertEqual(survey["next_batch"][0]["dataset_id"], "health_gym_icu")
+        self.assertIn("Health Gym", rendered)
+        self.assertIn("FiFAR", rendered)
+        self.assertIn("SynTReN", rendered)
+
+    def test_cli_writes_domain_dataset_survey(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            out_json = root / "survey.json"
+            out_md = root / "survey.md"
+
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "sde_bench",
+                    "dataset-survey",
+                    "--json-out",
+                    str(out_json),
+                    "--md-out",
+                    str(out_md),
+                ],
+                check=False,
+                text=True,
+                capture_output=True,
+            )
+
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            survey = json.loads(out_json.read_text(encoding="utf-8"))
+            self.assertIn("candidate_datasets", survey)
+            self.assertIn("Domain Coverage", out_md.read_text(encoding="utf-8"))
+
     def test_original_benchmark_matrix_records_staged_applicability(self) -> None:
         reports = {
             "KMUC": {

@@ -9,6 +9,7 @@ from .adapters.medsynth import export_medsynth_records
 from .adapters.synthea import export_synthea_records
 from .adapters.synsum import export_synsum_records
 from .core import benchmark, evaluate
+from .domain_datasets import build_domain_survey, markdown_domain_survey
 from .io import load_records, load_source, write_json, write_markdown, write_records
 from .original_benchmarks import build_cross_benchmark_report, markdown_cross_benchmark
 
@@ -74,6 +75,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     cross_parser.add_argument("--json-out", type=Path, default=None)
     cross_parser.add_argument("--md-out", type=Path, default=None)
+
+    survey_parser = sub.add_parser("dataset-survey", help="build a public synthetic dataset survey")
+    survey_parser.add_argument("--json-out", type=Path, default=None)
+    survey_parser.add_argument("--md-out", type=Path, default=None)
 
     args = parser.parse_args(argv)
 
@@ -149,6 +154,19 @@ def main(argv: list[str] | None = None) -> int:
             from json import dumps
 
             print(dumps(report, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.command == "dataset-survey":
+        survey = build_domain_survey()
+        if args.json_out:
+            write_json(survey, args.json_out)
+        if args.md_out:
+            args.md_out.parent.mkdir(parents=True, exist_ok=True)
+            args.md_out.write_text(markdown_domain_survey(survey), encoding="utf-8")
+        if not args.json_out and not args.md_out:
+            from json import dumps
+
+            print(dumps(survey, ensure_ascii=False, indent=2))
         return 0
 
     sensitive_columns = [item.strip() for item in args.sensitive.split(",") if item.strip()]
