@@ -31,6 +31,11 @@ preferably as JSONL.
 | `simsum_respiratory` | `evaluated` | Semicolon CSV | `python -m sde_bench synsum-export` | `reports/public_benchmarks/simsum/report.md` |
 | `synthea_ehr_sample` | `evaluated` | CSV tables | `python -m sde_bench synthea-export` | `reports/public_benchmarks/synthea/report.md` |
 
+The current original-paper benchmark matrix is generated at
+`reports/public_benchmarks/cross_benchmark_matrix.md` and keeps three stages:
+KMUC under prior benchmark families, public datasets under those same benchmark
+families, and all datasets under SDE-Bench.
+
 ## External Public Candidates
 
 | Dataset ID | Status | Source | Why It Fits | Adapter Work |

@@ -15,7 +15,7 @@ its native files to the common JSON/JSONL/CSV schema.
 
 ## Evaluation Axes
 
-SDE-Bench reports seven axes.
+SDE-Bench reports eight axes.
 
 | Axis | Purpose | Origin |
 |---|---|---|
@@ -26,11 +26,14 @@ SDE-Bench reports seven axes.
 | `medical_diversity` | Coverage, entropy, and unique-record diversity | Synthetic-data benchmark core |
 | `clinical_groundedness` | Source attribution and evidence support for generated clinical claims | SDE-Bench medical extension |
 | `clinical_validity` | Rule/source consistency for fields such as ICD-10, procedure, acuity, laterality, department, and diagnosis | SDE-Bench medical extension |
+| `medical_interoperability` | OMOP/FHIR-style structural readiness when longitudinal EHR fields are present | SDE-Bench medical extension |
 
-The two SDE-specific axes are `clinical_groundedness` and `clinical_validity`.
-They are intended for LLM + RAG pipelines, where the important question is not
-only whether records resemble a target distribution, but also whether generated
-records are traceable to evidence and clinically coherent.
+The SDE-specific axes are `clinical_groundedness`, `clinical_validity`, and
+`medical_interoperability`. They are intended for LLM + RAG pipelines and
+medical synthetic EHRs, where the important question is not only whether records
+resemble a target distribution, but also whether generated records are traceable
+to evidence, clinically coherent, and mappable to standard data models when the
+native dataset supports that claim.
 
 For exact formulas, see [docs/formulas.md](docs/formulas.md). For the common
 record schema, see [docs/schema.md](docs/schema.md).
@@ -92,6 +95,18 @@ python3 -m sde_bench benchmark \
   --target dept \
   --sensitive sex \
   --json-out reports/example_benchmark.json
+```
+
+Original-paper benchmark matrix:
+
+```bash
+python3 -m sde_bench cross-benchmark \
+  --sde-report KMUC=reports/kmuc_sde_report.json \
+  --sde-report MedSynth=reports/public_benchmarks/medsynth/report.json \
+  --sde-report SimSUM=reports/public_benchmarks/simsum/report.json \
+  --sde-report Synthea=reports/public_benchmarks/synthea/report.json \
+  --json-out reports/public_benchmarks/cross_benchmark_matrix.json \
+  --md-out reports/public_benchmarks/cross_benchmark_matrix.md
 ```
 
 ## Python API

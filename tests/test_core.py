@@ -11,6 +11,7 @@ from sde_bench.adapters.kmuc import export_kmuc_records
 from sde_bench.adapters.medsynth import export_medsynth_records
 from sde_bench.adapters.synthea import export_synthea_records
 from sde_bench.adapters.synsum import export_synsum_records
+from sde_bench.original_benchmarks import build_cross_benchmark_report, markdown_cross_benchmark
 
 
 def write_csv(path: Path, rows: list[dict]) -> None:
@@ -436,6 +437,74 @@ class SdeBenchCoreTests(unittest.TestCase):
 
 
 class SdeBenchCliTests(unittest.TestCase):
+    def test_original_benchmark_matrix_records_staged_applicability(self) -> None:
+        reports = {
+            "KMUC": {
+                "overall_score": 0.8,
+                "axes": {
+                    "medical_fidelity": {"score": 1.0},
+                    "medical_interoperability": {"score": None},
+                },
+            },
+            "Synthea": {
+                "overall_score": 0.82,
+                "axes": {
+                    "medical_fidelity": {"score": 0.3},
+                    "medical_interoperability": {"score": 1.0},
+                },
+            },
+        }
+
+        report = build_cross_benchmark_report(reports)
+        rendered = markdown_cross_benchmark(report)
+
+        self.assertEqual(report["stage_a"]["kmuc_matching"]["status"], "computed")
+        self.assertEqual(report["stage_b"]["simsum_symptom_ie"]["SimSUM"]["status"], "paper_reported")
+        self.assertEqual(report["stage_b"]["synthea_structured_ehr"]["Synthea"]["value"], "`medical_interoperability=1.0000`")
+        self.assertIn("Stage A", rendered)
+        self.assertIn("medical_interoperability=1.0000", rendered)
+
+    def test_cli_writes_cross_benchmark_matrix(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            kmuc_report = root / "kmuc.json"
+            synthea_report = root / "synthea.json"
+            out_json = root / "cross.json"
+            out_md = root / "cross.md"
+            kmuc_report.write_text(
+                json.dumps({"overall_score": 0.8, "axes": {"medical_fidelity": {"score": 1.0}}}),
+                encoding="utf-8",
+            )
+            synthea_report.write_text(
+                json.dumps({"overall_score": 0.82, "axes": {"medical_interoperability": {"score": 1.0}}}),
+                encoding="utf-8",
+            )
+
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "sde_bench",
+                    "cross-benchmark",
+                    "--sde-report",
+                    f"KMUC={kmuc_report}",
+                    "--sde-report",
+                    f"Synthea={synthea_report}",
+                    "--json-out",
+                    str(out_json),
+                    "--md-out",
+                    str(out_md),
+                ],
+                check=False,
+                text=True,
+                capture_output=True,
+            )
+
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            matrix = json.loads(out_json.read_text(encoding="utf-8"))
+            self.assertIn("benchmark_families", matrix)
+            self.assertIn("SDE-Bench Cross-Dataset Results", out_md.read_text(encoding="utf-8"))
+
     def test_cli_writes_json_and_markdown_reports(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)

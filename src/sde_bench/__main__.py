@@ -10,6 +10,7 @@ from .adapters.synthea import export_synthea_records
 from .adapters.synsum import export_synsum_records
 from .core import benchmark, evaluate
 from .io import load_records, load_source, write_json, write_markdown, write_records
+from .original_benchmarks import build_cross_benchmark_report, markdown_cross_benchmark
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -63,6 +64,16 @@ def main(argv: list[str] | None = None) -> int:
     synthea_parser.add_argument("--format", choices=["jsonl", "json", "csv"], default="jsonl")
     synthea_parser.add_argument("--split-fraction", type=float, default=0.5)
     synthea_parser.add_argument("--limit", type=int, default=None)
+
+    cross_parser = sub.add_parser("cross-benchmark", help="build original-paper benchmark cross-evaluation matrix")
+    cross_parser.add_argument(
+        "--sde-report",
+        action="append",
+        default=[],
+        help="dataset=report.json entry; may be repeated",
+    )
+    cross_parser.add_argument("--json-out", type=Path, default=None)
+    cross_parser.add_argument("--md-out", type=Path, default=None)
 
     args = parser.parse_args(argv)
 
@@ -126,6 +137,20 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 0
 
+    if args.command == "cross-benchmark":
+        sde_reports = _load_named_reports(args.sde_report)
+        report = build_cross_benchmark_report(sde_reports)
+        if args.json_out:
+            write_json(report, args.json_out)
+        if args.md_out:
+            args.md_out.parent.mkdir(parents=True, exist_ok=True)
+            args.md_out.write_text(markdown_cross_benchmark(report), encoding="utf-8")
+        if not args.json_out and not args.md_out:
+            from json import dumps
+
+            print(dumps(report, ensure_ascii=False, indent=2))
+        return 0
+
     sensitive_columns = [item.strip() for item in args.sensitive.split(",") if item.strip()]
 
     if args.command == "evaluate":
@@ -179,6 +204,16 @@ def _load_kmuc_predictions(path: Path | None) -> list[dict]:
     if isinstance(data, list):
         return data
     return []
+
+
+def _load_named_reports(entries: list[str]) -> dict[str, dict]:
+    reports: dict[str, dict] = {}
+    for entry in entries:
+        if "=" not in entry:
+            raise ValueError(f"--sde-report must use dataset=path format: {entry}")
+        name, path = entry.split("=", 1)
+        reports[name] = json.loads(Path(path).read_text(encoding="utf-8"))
+    return reports
 
 
 if __name__ == "__main__":
