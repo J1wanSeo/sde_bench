@@ -207,6 +207,16 @@ class SdeBenchCoreTests(unittest.TestCase):
 
         self.assertEqual(config["axes"], ["medical_fidelity", "clinical_task_utility", "privacy", "equity", "medical_diversity"])
 
+    def test_equity_without_sensitive_columns_is_not_scored_as_fair(self) -> None:
+        report = evaluate(
+            real=[{"case_id": "A", "age": 40, "dept": "OS"}],
+            synthetic=[{"case_id": "S1", "age": 41, "dept": "OS"}],
+            sensitive_columns=[],
+        )
+
+        self.assertIsNone(report["axes"]["equity"]["score"])
+        self.assertEqual(report["axes"]["equity"]["metrics"]["skipped"], "no_sensitive_columns")
+
     def test_kmuc_adapter_exports_reference_source_and_lay_variant_records(self) -> None:
         enriched = [
             {

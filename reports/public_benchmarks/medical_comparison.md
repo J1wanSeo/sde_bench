@@ -31,12 +31,12 @@ synthetic medical datasets.
 | Dataset | Overall | Medical Fidelity | Clinical Task Utility | Privacy | Equity | Medical Diversity | Clinical Groundedness | Clinical Validity |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | KMUC synthetic lay cases | `0.8092` | `1.0000` | `0.8733` | `0.5000` | `0.8474` | `1.0000` | `0.5028` | `0.9408` |
-| MedSynth | `0.7811` | `0.2289` | `1.0000` | `0.7061` | `1.0000*` | `0.7198` | `0.8128` | `1.0000` |
-| SimSUM sampled compact notes | `0.8151` | `0.9531` | `1.0000` | `0.1340` | `1.0000*` | `0.7648` | `0.8540` | `1.0000` |
+| MedSynth | `0.7446` | `0.2289` | `1.0000` | `0.7061` | `n/a*` | `0.7198` | `0.8128` | `1.0000` |
+| SimSUM sampled compact notes | `0.7843` | `0.9531` | `1.0000` | `0.1340` | `n/a*` | `0.7648` | `0.8540` | `1.0000` |
 
 `*` Equity is skipped/no-sensitive-columns for MedSynth and SimSUM, so the
-current implementation reports a neutral score with a skipped metric. It should
-not be interpreted as demonstrated fairness.
+axis is excluded from the overall score. It should not be interpreted as
+demonstrated fairness.
 
 ## Interpretation
 
@@ -101,3 +101,17 @@ PYTHONPATH=src python3 -m sde_bench evaluate \
 - MedSynth dataset: https://huggingface.co/datasets/Ahmad0067/MedSynth
 - SimSUM paper/repository: https://github.com/prabaey/SimSUM
 - SimSUM arXiv version: https://arxiv.org/html/2409.08936v1
+
+## Attempted Additional Baselines
+
+1. Synthea EHR generator
+   - Source: https://github.com/synthetichealth/synthea
+   - Status: not evaluated in this run because the local environment has no Java
+     runtime. Synthea remains the next preferred EHR-style baseline once Java is
+     available.
+
+2. CMS SynPUF
+   - Source: https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files
+   - Status: candidate. The public CMS page documents the synthetic claims
+     purpose and user agreement, but the current automated run did not obtain a
+     stable direct data-file URL.

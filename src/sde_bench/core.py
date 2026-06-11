@@ -182,7 +182,7 @@ def _fairness(
     sensitive_columns: list[str],
 ) -> dict[str, Any]:
     if not sensitive_columns:
-        return {"score": 1.0, "metrics": {"skipped": "no_sensitive_columns"}}
+        return {"score": None, "metrics": {"skipped": "no_sensitive_columns"}}
     scores = []
     for col in sensitive_columns:
         scores.append(1.0 - _categorical_tv(_values(real, col), _values(synthetic, col)))

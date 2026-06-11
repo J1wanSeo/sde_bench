@@ -30,7 +30,7 @@
       }
     },
     "equity": {
-      "score": 1.0,
+      "score": null,
       "metrics": {
         "skipped": "no_sensitive_columns"
       }
@@ -65,7 +65,7 @@
       }
     }
   },
-  "overall_score": 0.8151254559201219,
+  "overall_score": 0.7843130319068088,
   "skipped": [
     "equity.group_metrics: provide sensitive columns such as sex/gender/race"
   ],
