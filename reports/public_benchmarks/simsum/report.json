@@ -1,0 +1,73 @@
+{
+  "schema_version": "0.1.0",
+  "records": {
+    "real": 1000,
+    "synthetic": 1000
+  },
+  "config": "full_eval",
+  "axes": {
+    "medical_fidelity": {
+      "score": 0.9530926991870482,
+      "metrics": {
+        "column_similarity": 0.9705187317074297,
+        "pairwise_similarity": 0.9356666666666666,
+        "columns_compared": 17,
+        "pairs_compared": 15
+      }
+    },
+    "clinical_task_utility": {
+      "score": 1.0,
+      "metrics": {
+        "target_population_rate": 1.0
+      }
+    },
+    "privacy": {
+      "score": 0.134,
+      "metrics": {
+        "exact_duplicate_rate": 0.732,
+        "median_distance_to_reference": 0.0,
+        "records_compared": 1000
+      }
+    },
+    "equity": {
+      "score": 1.0,
+      "metrics": {
+        "skipped": "no_sensitive_columns"
+      }
+    },
+    "medical_diversity": {
+      "score": 0.7648129808134755,
+      "metrics": {
+        "category_coverage": 1.0,
+        "entropy_ratio": 0.9364389424404264,
+        "unique_record_ratio": 0.358,
+        "categorical_columns": 6
+      }
+    },
+    "clinical_groundedness": {
+      "score": 0.8539725114403292,
+      "metrics": {
+        "source_attribution_rate": 1.0,
+        "evidence_support_score": 0.7079450228806584,
+        "evidence_support_n": 964
+      }
+    },
+    "clinical_validity": {
+      "score": 1.0,
+      "metrics": {
+        "age_validity": 1.0,
+        "non_empty_diagnosis_rate": 1.0,
+        "icd10_format_validity": 1.0,
+        "procedure_completeness": 1.0,
+        "acuity_validity": 1.0,
+        "laterality_validity": 1.0,
+        "diagnosis_source_overlap": 1.0
+      }
+    }
+  },
+  "overall_score": 0.8151254559201219,
+  "skipped": [
+    "equity.group_metrics: provide sensitive columns such as sex/gender/race"
+  ],
+  "name": "synthetic"
+}

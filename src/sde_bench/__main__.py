@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 
 from .adapters.kmuc import export_kmuc_records
+from .adapters.medsynth import export_medsynth_records
+from .adapters.synsum import export_synsum_records
 from .core import benchmark, evaluate
 from .io import load_records, load_source, write_json, write_markdown, write_records
 
@@ -40,6 +42,20 @@ def main(argv: list[str] | None = None) -> int:
     kmuc_parser.add_argument("--out-dir", required=True, type=Path)
     kmuc_parser.add_argument("--format", choices=["jsonl", "json", "csv"], default="jsonl")
 
+    synsum_parser = sub.add_parser("synsum-export", help="export SynSUM CSV records to SDE-Bench records")
+    synsum_parser.add_argument("--input", required=True, type=Path, help="SynSUM.csv path")
+    synsum_parser.add_argument("--out-dir", required=True, type=Path)
+    synsum_parser.add_argument("--format", choices=["jsonl", "json", "csv"], default="jsonl")
+    synsum_parser.add_argument("--split-fraction", type=float, default=0.5)
+    synsum_parser.add_argument("--limit", type=int, default=None)
+
+    medsynth_parser = sub.add_parser("medsynth-export", help="export MedSynth dialogue-note CSV records to SDE-Bench records")
+    medsynth_parser.add_argument("--input", required=True, type=Path, help="MedSynth_huggingface_final.csv path")
+    medsynth_parser.add_argument("--out-dir", required=True, type=Path)
+    medsynth_parser.add_argument("--format", choices=["jsonl", "json", "csv"], default="jsonl")
+    medsynth_parser.add_argument("--split-fraction", type=float, default=0.5)
+    medsynth_parser.add_argument("--limit", type=int, default=None)
+
     args = parser.parse_args(argv)
 
     if args.command == "kmuc-export":
@@ -57,6 +73,32 @@ def main(argv: list[str] | None = None) -> int:
         write_records(exported["reference"], args.out_dir / f"reference{suffix}")
         write_records(exported["source"], args.out_dir / f"source{suffix}")
         write_records(exported["synthetic"], args.out_dir / f"synthetic_lay{suffix}")
+        print(
+            f"exported reference={len(exported['reference'])} source={len(exported['source'])} "
+            f"synthetic={len(exported['synthetic'])} to {args.out_dir}"
+        )
+        return 0
+
+    if args.command == "synsum-export":
+        exported = export_synsum_records(load_records(args.input), split_fraction=args.split_fraction, limit=args.limit)
+        args.out_dir.mkdir(parents=True, exist_ok=True)
+        suffix = f".{args.format}"
+        write_records(exported["reference"], args.out_dir / f"reference{suffix}")
+        write_records(exported["source"], args.out_dir / f"source{suffix}")
+        write_records(exported["synthetic"], args.out_dir / f"synthetic{suffix}")
+        print(
+            f"exported reference={len(exported['reference'])} source={len(exported['source'])} "
+            f"synthetic={len(exported['synthetic'])} to {args.out_dir}"
+        )
+        return 0
+
+    if args.command == "medsynth-export":
+        exported = export_medsynth_records(load_records(args.input), split_fraction=args.split_fraction, limit=args.limit)
+        args.out_dir.mkdir(parents=True, exist_ok=True)
+        suffix = f".{args.format}"
+        write_records(exported["reference"], args.out_dir / f"reference{suffix}")
+        write_records(exported["source"], args.out_dir / f"source{suffix}")
+        write_records(exported["synthetic"], args.out_dir / f"synthetic{suffix}")
         print(
             f"exported reference={len(exported['reference'])} source={len(exported['source'])} "
             f"synthetic={len(exported['synthetic'])} to {args.out_dir}"

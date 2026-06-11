@@ -8,6 +8,8 @@ from tempfile import TemporaryDirectory
 
 from sde_bench import benchmark, evaluate, load_config, load_records
 from sde_bench.adapters.kmuc import export_kmuc_records
+from sde_bench.adapters.medsynth import export_medsynth_records
+from sde_bench.adapters.synsum import export_synsum_records
 
 
 def write_csv(path: Path, rows: list[dict]) -> None:
@@ -53,6 +55,18 @@ class SdeBenchCoreTests(unittest.TestCase):
 
             self.assertEqual(load_records(json_path), rows)
             self.assertEqual(load_records(jsonl_path), rows)
+
+    def test_load_records_sniffs_semicolon_csv(self) -> None:
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "records.csv"
+            path.write_text(";policy;common_cold;days_at_home\n0;yes;1;2\n", encoding="utf-8")
+
+            records = load_records(path)
+
+        self.assertEqual(records[0]["policy"], "yes")
+        self.assertEqual(records[0]["common_cold"], 1)
+        self.assertEqual(records[0]["days_at_home"], 2)
+        self.assertNotIn("", records[0])
 
     def test_evaluate_returns_medical_benchmark_axes(self) -> None:
         real = [
@@ -133,7 +147,7 @@ class SdeBenchCoreTests(unittest.TestCase):
                     "age": 40,
                     "dept": "OS",
                     "diagnosis": "ACL tear",
-                    "icd10_codes": "S83,I10",
+                    "icd10_codes": "S83,I10,M25562",
                     "procedures": "ACL reconstruction",
                     "acuity": "elective",
                     "laterality": "left",
@@ -188,6 +202,11 @@ class SdeBenchCoreTests(unittest.TestCase):
 
         self.assertEqual(config["axes"], ["privacy", "clinical_groundedness"])
 
+    def test_bundled_core_preset_excludes_medical_specific_axes(self) -> None:
+        config = load_config("core_eval")
+
+        self.assertEqual(config["axes"], ["medical_fidelity", "clinical_task_utility", "privacy", "equity", "medical_diversity"])
+
     def test_kmuc_adapter_exports_reference_source_and_lay_variant_records(self) -> None:
         enriched = [
             {
@@ -224,6 +243,78 @@ class SdeBenchCoreTests(unittest.TestCase):
         self.assertEqual(exported["synthetic"][0]["source_id"], "KMUC-OS-001")
         self.assertEqual(exported["synthetic"][0]["claim"], "왼쪽 고관절 골절로 수술 상담을 받고 싶어요.")
         self.assertEqual(exported["synthetic"][0]["evidence"], "가상환자A01 (M/72)\n")
+
+    def test_synsum_adapter_exports_internal_split_records(self) -> None:
+        rows = [
+            {
+                "pneu": "1",
+                "cold": "0",
+                "dysp": "1",
+                "cough": "1",
+                "pain": "0",
+                "fever": "1",
+                "nasal": "0",
+                "asthma": "0",
+                "smoking": "1",
+                "COPD": "0",
+                "hay_fever": "0",
+                "antibiotics": "1",
+                "season": "winter",
+                "days_at_home": "5",
+                "text": "Patient has pneumonia with cough and fever.",
+                "advanced_text": "PNA, cough, fever.",
+            },
+            {
+                "pneu": "0",
+                "cold": "1",
+                "dysp": "0",
+                "cough": "1",
+                "pain": "0",
+                "fever": "0",
+                "nasal": "1",
+                "asthma": "0",
+                "smoking": "0",
+                "COPD": "0",
+                "hay_fever": "1",
+                "antibiotics": "0",
+                "season": "spring",
+                "days_at_home": "2",
+                "text": "Patient has common cold and nasal symptoms.",
+                "advanced_text": "Cold, nasal symptoms.",
+            },
+        ]
+
+        exported = export_synsum_records(rows, split_fraction=0.5)
+
+        self.assertEqual(exported["reference"][0]["diagnosis_group"], "pneumonia")
+        self.assertEqual(exported["synthetic"][0]["diagnosis_group"], "common_cold")
+        self.assertEqual(exported["synthetic"][0]["claim"], "Cold, nasal symptoms.")
+        self.assertEqual(exported["synthetic"][0]["evidence"], "Patient has common cold and nasal symptoms.")
+        self.assertEqual(exported["synthetic"][0]["source_id"], exported["source"][0]["source_id"])
+
+    def test_medsynth_adapter_exports_dialogue_note_records(self) -> None:
+        rows = [
+            {
+                " Note": "The patient is a 52-year-old with left knee pain.",
+                "Dialogue": "[patient] I have left knee pain.",
+                "ICD10": "M25562",
+                "ICD10_desc": "PAIN IN LEFT KNEE",
+            },
+            {
+                " Note": "The patient is a 40-year-old with cough.",
+                "Dialogue": "[patient] I have cough.",
+                "ICD10": "R05",
+                "ICD10_desc": "COUGH",
+            },
+        ]
+
+        exported = export_medsynth_records(rows, split_fraction=0.5)
+
+        self.assertEqual(exported["reference"][0]["icd10_codes"], "M25562")
+        self.assertEqual(exported["synthetic"][0]["diagnosis_group"], "R05")
+        self.assertEqual(exported["synthetic"][0]["age"], 40)
+        self.assertEqual(exported["synthetic"][0]["evidence"], "[patient] I have cough.")
+        self.assertEqual(exported["synthetic"][0]["source_id"], exported["source"][0]["source_id"])
 
 
 class SdeBenchCliTests(unittest.TestCase):
@@ -333,6 +424,120 @@ class SdeBenchCliTests(unittest.TestCase):
             exported = load_records(out_dir / "synthetic_lay.jsonl")
             self.assertEqual(exported[0]["source_id"], "KMUC-OS-001")
             self.assertEqual(exported[0]["predicted_dept"], "OS")
+            self.assertTrue((out_dir / "reference.jsonl").exists())
+            self.assertTrue((out_dir / "source.jsonl").exists())
+
+    def test_cli_exports_synsum_files(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            synsum_path = root / "SynSUM.csv"
+            out_dir = root / "out"
+            write_csv(
+                synsum_path,
+                [
+                    {
+                        "pneu": "1",
+                        "cold": "0",
+                        "dysp": "1",
+                        "cough": "1",
+                        "pain": "0",
+                        "fever": "1",
+                        "nasal": "0",
+                        "asthma": "0",
+                        "smoking": "1",
+                        "COPD": "0",
+                        "hay_fever": "0",
+                        "antibiotics": "1",
+                        "season": "winter",
+                        "days_at_home": "5",
+                        "text": "Patient has pneumonia with cough and fever.",
+                        "advanced_text": "PNA, cough, fever.",
+                    },
+                    {
+                        "pneu": "0",
+                        "cold": "1",
+                        "dysp": "0",
+                        "cough": "1",
+                        "pain": "0",
+                        "fever": "0",
+                        "nasal": "1",
+                        "asthma": "0",
+                        "smoking": "0",
+                        "COPD": "0",
+                        "hay_fever": "1",
+                        "antibiotics": "0",
+                        "season": "spring",
+                        "days_at_home": "2",
+                        "text": "Patient has common cold and nasal symptoms.",
+                        "advanced_text": "Cold, nasal symptoms.",
+                    },
+                ],
+            )
+
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "sde_bench",
+                    "synsum-export",
+                    "--input",
+                    str(synsum_path),
+                    "--out-dir",
+                    str(out_dir),
+                ],
+                check=False,
+                text=True,
+                capture_output=True,
+            )
+
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            exported = load_records(out_dir / "synthetic.jsonl")
+            self.assertEqual(exported[0]["diagnosis_group"], "common_cold")
+            self.assertTrue((out_dir / "reference.jsonl").exists())
+            self.assertTrue((out_dir / "source.jsonl").exists())
+
+    def test_cli_exports_medsynth_files(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            medsynth_path = root / "MedSynth.csv"
+            out_dir = root / "out"
+            write_csv(
+                medsynth_path,
+                [
+                    {
+                        " Note": "The patient is a 52-year-old with left knee pain.",
+                        "Dialogue": "[patient] I have left knee pain.",
+                        "ICD10": "M25562",
+                        "ICD10_desc": "PAIN IN LEFT KNEE",
+                    },
+                    {
+                        " Note": "The patient is a 40-year-old with cough.",
+                        "Dialogue": "[patient] I have cough.",
+                        "ICD10": "R05",
+                        "ICD10_desc": "COUGH",
+                    },
+                ],
+            )
+
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "sde_bench",
+                    "medsynth-export",
+                    "--input",
+                    str(medsynth_path),
+                    "--out-dir",
+                    str(out_dir),
+                ],
+                check=False,
+                text=True,
+                capture_output=True,
+            )
+
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            exported = load_records(out_dir / "synthetic.jsonl")
+            self.assertEqual(exported[0]["icd10_codes"], "R05")
             self.assertTrue((out_dir / "reference.jsonl").exists())
             self.assertTrue((out_dir / "source.jsonl").exists())
 

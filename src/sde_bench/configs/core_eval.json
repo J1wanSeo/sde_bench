@@ -1,0 +1,10 @@
+{
+  "name": "core_eval",
+  "axes": [
+    "medical_fidelity",
+    "clinical_task_utility",
+    "privacy",
+    "equity",
+    "medical_diversity"
+  ]
+}

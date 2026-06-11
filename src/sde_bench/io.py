@@ -36,7 +36,16 @@ def load_records(path: str | Path) -> list[Record]:
     suffix = source.suffix.lower()
     if suffix == ".csv":
         with source.open(encoding="utf-8-sig", newline="") as handle:
-            return [{k: _coerce(v or "") for k, v in row.items()} for row in csv.DictReader(handle)]
+            sample = handle.read(4096)
+            handle.seek(0)
+            try:
+                dialect = csv.Sniffer().sniff(sample, delimiters=",;\t")
+            except csv.Error:
+                dialect = csv.excel
+            return [
+                {k: _coerce(v or "") for k, v in row.items() if k not in (None, "")}
+                for row in csv.DictReader(handle, dialect=dialect)
+            ]
     if suffix == ".jsonl":
         rows: list[Record] = []
         with source.open(encoding="utf-8") as handle:

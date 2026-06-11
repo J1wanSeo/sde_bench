@@ -5,4 +5,5 @@ __pycache__/
 dist/
 build/
 *.egg-info/
-
+data/public_raw/
+reports/public_benchmarks/*/*.jsonl

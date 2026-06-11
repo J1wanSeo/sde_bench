@@ -1,0 +1,11 @@
+{
+  "name": "core_eval",
+  "axes": [
+    "medical_fidelity",
+    "clinical_task_utility",
+    "privacy",
+    "equity",
+    "medical_diversity"
+  ],
+  "description": "Run domain-general SDE-Bench axes without medical-only groundedness and clinical-validity checks."
+}

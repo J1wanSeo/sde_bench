@@ -34,7 +34,7 @@ ID_COLUMNS = {
     "expected_dept",
 }
 DEFAULT_SENSITIVE_COLUMNS = ("sex", "gender", "race", "ethnicity", "age_group")
-ICD10_RE = re.compile(r"^[A-TV-Z][0-9][0-9A-Z]?(?:\.[0-9A-Z]{1,4})?$")
+ICD10_RE = re.compile(r"^[A-TV-Z][0-9][0-9A-Z]?(?:\.?[0-9A-Z]{1,4})?$")
 VALID_ACUITY = {"routine", "elective", "urgent", "emergency"}
 VALID_LATERALITY = {"left", "right", "bilateral", "none", "midline", "unknown"}
 
