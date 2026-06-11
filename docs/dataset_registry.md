@@ -31,14 +31,15 @@ preferably as JSONL.
 | `simsum_respiratory` | `evaluated` | Semicolon CSV | `python -m sde_bench synsum-export` | `reports/public_benchmarks/simsum/report.md` |
 | `synthea_ehr_sample` | `evaluated` | CSV tables | `python -m sde_bench synthea-export` | `reports/public_benchmarks/synthea/report.md` |
 | `health_gym_art_hiv` | `evaluated` | CSV longitudinal monthly records | `python -m sde_bench health-gym-export` | `reports/public_benchmarks/health_gym/report.md` |
+| `de_synpuf_claims` | `evaluated` | CSV claims tables | `python -m sde_bench de-synpuf-export` | `reports/public_benchmarks/de_synpuf/report.md` |
 | `amlsim_transactions_sample` | `evaluated` | CSV transactions | `python -m sde_bench amlsim-export` | `reports/public_benchmarks/amlsim/report.md` |
 
 The current original-paper benchmark matrix is generated at
-`reports/public_benchmarks/cross_benchmark_matrix.md` and keeps three stages:
-KMUC under prior benchmark families, public datasets under those same benchmark
-families, and all datasets under SDE-Bench. Its combined Stage A/B table uses
-one row per original paper benchmark family and one column per evaluated
-dataset, so non-portable prior metrics are visible instead of silently omitted.
+`reports/public_benchmarks/cross_benchmark_matrix.md` and keeps two stages.
+Stage A uses one row per original paper benchmark family and one column per
+evaluated dataset, so non-portable prior metrics are visible instead of silently
+omitted. Stage B compares all evaluated datasets under the common SDE-Bench
+medical axes.
 
 The current domain-expansion survey is generated at
 `reports/public_benchmarks/domain_dataset_survey.md`. It records medical,
@@ -54,8 +55,7 @@ the full cross-domain candidate matrix and next-batch priority list.
 
 | Dataset ID | Status | Source | Why It Fits | Adapter Work |
 |---|---|---|---|---|
-| `de_synpuf_claims` | `next_batch` | https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files | CMS synthetic claims files; useful for claims-style distributional, privacy, equity, and utilization-task evaluation. | Map beneficiary, claim, diagnosis, and procedure files to patient or encounter records. |
-| `health_gym_icu` | `candidate` | https://arxiv.org/abs/2203.06369 | Public synthetic longitudinal health data for offline reinforcement learning and medical time-series evaluation. | Flatten ICU/sepsis/hypotension trajectories into JSONL visit/time records. |
+| `health_gym_icu` | `next_batch` | https://arxiv.org/abs/2203.06369 | Public synthetic longitudinal health data for offline reinforcement learning and medical time-series evaluation; requires PhysioNet credential and DUA before execution. | Flatten ICU/sepsis/hypotension trajectories into JSONL visit/time records. |
 | `sm3_text_to_query` | `candidate` | https://arxiv.org/abs/2411.05521 | Synthea-derived synthetic medical database plus text-to-query benchmark. | Extract patient tables separately from query-pair task data. |
 | `synsum_respiratory` | `superseded` | https://github.com/prabaey/SynSUM | Earlier repository name for SimSUM/SynSUM materials. | Use `simsum_respiratory` from https://github.com/prabaey/SimSUM. |
 | `medsyn_ru_notes` | `candidate` | https://arxiv.org/abs/2408.02056 | Open-source synthetic Russian clinical notes with ICD labels reported by the authors. | Locate dataset release, map ICD labels to `icd10_codes`, and evaluate multilingual text grounding carefully. |

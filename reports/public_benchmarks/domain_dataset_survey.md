@@ -26,14 +26,14 @@ This report expands SDE-Bench beyond the currently evaluated medical datasets wh
 | `simsum_respiratory` | medical | SimSUM | reports/public_benchmarks/simsum/report.md |
 | `synthea_ehr_sample` | medical | Synthea sample EHR | reports/public_benchmarks/synthea/report.md |
 | `health_gym_art_hiv` | medical | Health Gym ART for HIV | reports/public_benchmarks/health_gym/report.md |
+| `de_synpuf_claims` | medical | CMS DE-SynPUF inpatient claims sample | reports/public_benchmarks/de_synpuf/report.md |
 | `amlsim_transactions_sample` | finance | IBM AMLSim sample transactions | reports/public_benchmarks/amlsim/report.md |
 
 ## Candidate Datasets
 
 | Dataset ID | Domain | Priority | Status | Dataset | Native Format | Original Metric | SDE-Bench Plan | Adapter Work |
 |---|---|---|---|---|---|---|---|---|
-| `health_gym_icu` | medical | `P1` | `candidate` | [Health Gym ICU synthetic health datasets](https://github.com/NicKuo-ResearchStuff/Health_Gym_AI) | longitudinal tabular time series | offline RL task utility, distribution/correlation similarity, disclosure risk | map patient trajectories to per-visit records; evaluate fidelity, privacy, diversity, validity, and structured temporal traceability | flatten ICU/HIV trajectories into JSONL with patient_id, time, vitals/labs/actions/outcomes |
-| `de_synpuf_claims` | medical | `P1` | `next_batch` | [CMS DE-SynPUF claims](https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files) | claims tables | claims analytic usefulness and privacy-preserving public release | map beneficiary, diagnosis, procedure, and claim tables to encounter records | claims parser plus ICD/procedure field normalization |
+| `health_gym_icu` | medical | `P1` | `next_batch` | [Health Gym ICU synthetic health datasets](https://github.com/NicKuo-ResearchStuff/Health_Gym_AI) | longitudinal tabular time series | offline RL task utility, distribution/correlation similarity, disclosure risk | map patient trajectories to per-visit records; evaluate fidelity, privacy, diversity, validity, and structured temporal traceability | flatten ICU/HIV trajectories into JSONL with patient_id, time, vitals/labs/actions/outcomes |
 | `sm3_text_to_query` | medical | `P1` | `candidate` | [SM3-Text-to-Query](https://arxiv.org/abs/2411.05521) | synthetic Synthea-derived database plus natural-language query pairs | text-to-query execution accuracy across SQL, MQL, Cypher, and SPARQL | evaluate generated patient records separately from query-pair utility | extract patient tables from database dumps; keep query-pair task as original-benchmark family |
 | `fifar_fraud_l2d` | finance | `P0` | `next_batch` | [FiFAR financial fraud alert review dataset](https://github.com/feedzai/fifar-dataset) | tabular fraud alerts plus synthetic analyst predictions | learning-to-defer assignment utility under capacity constraints | evaluate tabular fidelity/diversity/privacy with fraud label utility; report domain as finance | generic CSV/Parquet loader plus target=is_fraud and optional sensitive/workload columns |
 | `synthaml_transactions` | finance | `P1` | `candidate` | [Synthetic AML transaction datasets](https://arxiv.org/abs/2306.16424) | transaction graph/table | AML detection utility and transaction realism | evaluate transaction-level fidelity/diversity/privacy and label utility; add graph metrics later | sample transaction tables; normalize account, amount, timestamp, label, and typology fields |
@@ -46,6 +46,6 @@ This report expands SDE-Bench beyond the currently evaluated medical datasets wh
 
 | Order | Dataset ID | Domain | Why Next |
 |---:|---|---|---|
-| 1 | `de_synpuf_claims` | medical | useful for claims-style medical synthetic data, but larger and less LLM/RAG-like than KMUC. |
+| 1 | `health_gym_icu` | medical | strongest medical longitudinal follow-up after the evaluated ART subset; requires PhysioNet credential and DUA before execution. |
 | 2 | `fifar_fraud_l2d` | finance | small enough to adapt and useful as a non-medical, high-stakes synthetic decision dataset. |
 | 3 | `syntren_gene_expression` | science | classic synthetic science dataset where ground-truth structure is part of the benchmark value. |

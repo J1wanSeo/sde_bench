@@ -10,6 +10,7 @@ from tempfile import TemporaryDirectory
 from sde_bench import benchmark, evaluate, load_config, load_records
 from sde_bench.core import _ks_distance
 from sde_bench.adapters.amlsim import export_amlsim_records
+from sde_bench.adapters.de_synpuf import export_de_synpuf_records
 from sde_bench.adapters.health_gym import export_health_gym_art_records
 from sde_bench.adapters.kmuc import export_kmuc_records
 from sde_bench.adapters.medsynth import export_medsynth_records
@@ -180,6 +181,29 @@ class SdeBenchCoreTests(unittest.TestCase):
         self.assertEqual(metrics["acuity_validity"], 0.5)
         self.assertEqual(metrics["laterality_validity"], 0.5)
         self.assertEqual(metrics["age_validity"], 0.5)
+
+    def test_clinical_validity_treats_icd9_and_missing_icd10_separately(self) -> None:
+        report = evaluate(
+            real=[{"case_id": "A", "age": 72, "diagnosis": "inpatient claim"}],
+            synthetic=[
+                {
+                    "case_id": "S1",
+                    "age": 72,
+                    "diagnosis": "7802",
+                    "icd9_codes": "7802|4019",
+                },
+                {
+                    "case_id": "S2",
+                    "age": 70,
+                    "diagnosis": "bad code",
+                    "icd9_codes": "BAD!",
+                },
+            ],
+        )
+
+        metrics = report["axes"]["clinical_validity"]["metrics"]
+        self.assertIsNone(metrics["icd10_format_validity"])
+        self.assertEqual(metrics["icd9_format_validity"], 0.5)
 
     def test_interoperability_axis_scores_omop_readiness(self) -> None:
         report = evaluate(
@@ -519,6 +543,70 @@ class SdeBenchCoreTests(unittest.TestCase):
         self.assertEqual(exported["synthetic"][0]["amount"], 5000)
         self.assertEqual(exported["synthetic"][0]["expected_transaction_type"], "WIRE")
 
+    def test_de_synpuf_adapter_exports_inpatient_claim_records(self) -> None:
+        beneficiaries = [
+            {
+                "DESYNPUF_ID": "BENE1",
+                "BENE_BIRTH_DT": "19300101",
+                "BENE_SEX_IDENT_CD": "1",
+                "BENE_RACE_CD": "1",
+                "SP_STATE_CODE": "26",
+                "BENE_ESRD_IND": "0",
+                "SP_DIABETES": "2",
+            },
+            {
+                "DESYNPUF_ID": "BENE2",
+                "BENE_BIRTH_DT": "19400101",
+                "BENE_SEX_IDENT_CD": "2",
+                "BENE_RACE_CD": "2",
+                "SP_STATE_CODE": "39",
+                "BENE_ESRD_IND": "1",
+                "SP_DIABETES": "1",
+            },
+        ]
+        inpatient = [
+            {
+                "DESYNPUF_ID": "BENE1",
+                "CLM_ID": "CLAIM1",
+                "CLM_FROM_DT": "20080110",
+                "CLM_THRU_DT": "20080112",
+                "CLM_PMT_AMT": "4000.00",
+                "CLM_UTLZTN_DAY_CNT": "2",
+                "CLM_DRG_CD": "217",
+                "ADMTNG_ICD9_DGNS_CD": "4580",
+                "ICD9_DGNS_CD_1": "7802",
+                "ICD9_DGNS_CD_2": "4019",
+                "ICD9_PRCDR_CD_1": "9904",
+            },
+            {
+                "DESYNPUF_ID": "BENE2",
+                "CLM_ID": "CLAIM2",
+                "CLM_FROM_DT": "20090201",
+                "CLM_THRU_DT": "20090205",
+                "CLM_PMT_AMT": "26000.00",
+                "CLM_UTLZTN_DAY_CNT": "4",
+                "CLM_DRG_CD": "201",
+                "ADMTNG_ICD9_DGNS_CD": "7866",
+                "ICD9_DGNS_CD_1": "1970",
+                "ICD9_DGNS_CD_2": "5853",
+                "ICD9_PRCDR_CD_1": "4516",
+            },
+        ]
+
+        exported = export_de_synpuf_records(beneficiaries, inpatient, split_fraction=0.5)
+
+        self.assertEqual(exported["reference"][0]["case_id"], "DESYNPUF-CLAIM1")
+        self.assertEqual(exported["synthetic"][0]["case_id"], "DESYNPUF-CLAIM2")
+        self.assertEqual(exported["synthetic"][0]["source_id"], exported["source"][0]["source_id"])
+        self.assertEqual(exported["synthetic"][0]["patient_id"], "BENE2")
+        self.assertEqual(exported["synthetic"][0]["sex"], "2")
+        self.assertEqual(exported["synthetic"][0]["age"], 69)
+        self.assertEqual(exported["synthetic"][0]["diagnosis_group"], "197")
+        self.assertEqual(exported["synthetic"][0]["icd9_codes"], "1970|5853")
+        self.assertEqual(exported["synthetic"][0]["procedures"], "4516")
+        self.assertEqual(exported["synthetic"][0]["standard_vocabularies"], "ICD9-CM")
+        self.assertIn("condition_occurrence", exported["synthetic"][0]["omop_domains"])
+
 
 class SdeBenchCliTests(unittest.TestCase):
     def test_domain_survey_prioritizes_medical_and_cross_domain_candidates(self) -> None:
@@ -529,7 +617,9 @@ class SdeBenchCliTests(unittest.TestCase):
         self.assertGreaterEqual(survey["domain_counts"]["medical"], 5)
         self.assertIn("finance", survey["domain_counts"])
         self.assertIn("science", survey["domain_counts"])
-        self.assertEqual(survey["next_batch"][0]["dataset_id"], "de_synpuf_claims")
+        evaluated_ids = {dataset["dataset_id"] for dataset in survey["evaluated_datasets"]}
+        self.assertIn("de_synpuf_claims", evaluated_ids)
+        self.assertEqual(survey["next_batch"][0]["dataset_id"], "health_gym_icu")
         self.assertIn("Health Gym", rendered)
         self.assertIn("FiFAR", rendered)
         self.assertIn("SynTReN", rendered)
@@ -582,13 +672,15 @@ class SdeBenchCliTests(unittest.TestCase):
         report = build_cross_benchmark_report(reports)
         rendered = markdown_cross_benchmark(report)
 
-        self.assertEqual(report["stage_a"]["kmuc_matching"]["status"], "computed")
-        self.assertEqual(report["stage_b"]["simsum_symptom_ie"]["SimSUM"]["status"], "paper_reported")
-        self.assertEqual(report["stage_b"]["synthea_structured_ehr"]["Synthea"]["value"], "`medical_interoperability=1.0000`")
-        self.assertIn("Stage A", rendered)
+        self.assertEqual(report["stage_a_original"]["kmuc_matching"]["KMUC"]["status"], "computed")
+        self.assertEqual(report["stage_a_original"]["simsum_symptom_ie"]["SimSUM"]["status"], "paper_reported")
+        self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["Synthea"]["value"], "`medical_interoperability=1.0000`")
+        self.assertIn("Stage A: Original-Metric Crosswalk", rendered)
+        self.assertIn("Stage B: SDE-Bench Cross-Dataset Results", rendered)
+        self.assertLess(rendered.index("**Original-benchmark layer**"), rendered.index("**SDE-Bench layer**"))
         self.assertIn("medical_interoperability=1.0000", rendered)
 
-    def test_original_benchmark_matrix_exposes_formula_and_combined_stage(self) -> None:
+    def test_original_benchmark_matrix_exposes_formula_and_two_stage_design(self) -> None:
         reports = {
             "KMUC": {
                 "overall_score": 0.8,
@@ -608,6 +700,12 @@ class SdeBenchCliTests(unittest.TestCase):
                     "medical_interoperability": {"score": 0.9583333333333334},
                 },
             },
+            "DeSynPUF": {
+                "overall_score": 0.88,
+                "axes": {
+                    "medical_interoperability": {"score": 0.9164644921676102},
+                },
+            },
         }
 
         report = build_cross_benchmark_report(reports)
@@ -616,12 +714,15 @@ class SdeBenchCliTests(unittest.TestCase):
         synthea_family = report["benchmark_families"]["synthea_structured_ehr"]
         self.assertIn("metric_formula", synthea_family)
         self.assertIn("applicability_rule", synthea_family)
-        self.assertEqual(report["stage_ab"]["synthea_structured_ehr"]["KMUC"]["status"], "not_applicable")
-        self.assertEqual(report["stage_ab"]["synthea_structured_ehr"]["Synthea"]["value"], "`medical_interoperability=1.0000`")
-        self.assertEqual(report["stage_ab"]["synthea_structured_ehr"]["HealthGymART"]["value"], "`medical_interoperability=0.9583`")
-        self.assertIn("Stage A/B Combined", rendered)
+        self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["KMUC"]["status"], "not_applicable")
+        self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["Synthea"]["value"], "`medical_interoperability=1.0000`")
+        self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["HealthGymART"]["value"], "`medical_interoperability=0.9583`")
+        self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["DeSynPUF"]["value"], "`medical_interoperability=0.9165`")
+        self.assertIn("Original-Metric Crosswalk", rendered)
+        self.assertNotIn("Stage C", rendered)
         self.assertIn("mean(domain_coverage", rendered)
         self.assertIn("HealthGymART", rendered)
+        self.assertIn("DeSynPUF", rendered)
 
     def test_cli_writes_cross_benchmark_matrix(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -1017,6 +1118,83 @@ class SdeBenchCliTests(unittest.TestCase):
             self.assertEqual(proc.returncode, 0, proc.stderr)
             exported = load_records(out_dir / "synthetic.jsonl")
             self.assertEqual(exported[0]["transaction_type"], "WIRE")
+            self.assertTrue((out_dir / "reference.jsonl").exists())
+            self.assertTrue((out_dir / "source.jsonl").exists())
+
+    def test_cli_exports_de_synpuf_files(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            beneficiary_path = root / "beneficiary.csv"
+            inpatient_path = root / "inpatient.csv"
+            out_dir = root / "out"
+            write_csv(
+                beneficiary_path,
+                [
+                    {
+                        "DESYNPUF_ID": "BENE1",
+                        "BENE_BIRTH_DT": "19300101",
+                        "BENE_SEX_IDENT_CD": "1",
+                        "BENE_RACE_CD": "1",
+                        "SP_STATE_CODE": "26",
+                        "BENE_ESRD_IND": "0",
+                    },
+                    {
+                        "DESYNPUF_ID": "BENE2",
+                        "BENE_BIRTH_DT": "19400101",
+                        "BENE_SEX_IDENT_CD": "2",
+                        "BENE_RACE_CD": "2",
+                        "SP_STATE_CODE": "39",
+                        "BENE_ESRD_IND": "1",
+                    },
+                ],
+            )
+            write_csv(
+                inpatient_path,
+                [
+                    {
+                        "DESYNPUF_ID": "BENE1",
+                        "CLM_ID": "CLAIM1",
+                        "CLM_FROM_DT": "20080110",
+                        "CLM_THRU_DT": "20080112",
+                        "CLM_PMT_AMT": "4000.00",
+                        "CLM_UTLZTN_DAY_CNT": "2",
+                        "CLM_DRG_CD": "217",
+                        "ICD9_DGNS_CD_1": "7802",
+                    },
+                    {
+                        "DESYNPUF_ID": "BENE2",
+                        "CLM_ID": "CLAIM2",
+                        "CLM_FROM_DT": "20090201",
+                        "CLM_THRU_DT": "20090205",
+                        "CLM_PMT_AMT": "26000.00",
+                        "CLM_UTLZTN_DAY_CNT": "4",
+                        "CLM_DRG_CD": "201",
+                        "ICD9_DGNS_CD_1": "1970",
+                    },
+                ],
+            )
+
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "sde_bench",
+                    "de-synpuf-export",
+                    "--beneficiary",
+                    str(beneficiary_path),
+                    "--inpatient",
+                    str(inpatient_path),
+                    "--out-dir",
+                    str(out_dir),
+                ],
+                check=False,
+                text=True,
+                capture_output=True,
+            )
+
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            exported = load_records(out_dir / "synthetic.jsonl")
+            self.assertEqual(exported[0]["case_id"], "DESYNPUF-CLAIM2")
             self.assertTrue((out_dir / "reference.jsonl").exists())
             self.assertTrue((out_dir / "source.jsonl").exists())
 

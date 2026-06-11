@@ -36,6 +36,7 @@ ID_COLUMNS = {
 }
 DEFAULT_SENSITIVE_COLUMNS = ("sex", "gender", "race", "ethnicity", "age_group")
 ICD10_RE = re.compile(r"^[A-TV-Z][0-9][0-9A-Z]?(?:\.?[0-9A-Z]{1,4})?$")
+ICD9_RE = re.compile(r"^(?:[VE]?\d{3,5}|E\d{3,4}|V\d{2,4})(?:\.\d{1,2})?$", re.IGNORECASE)
 VALID_ACUITY = {"routine", "elective", "urgent", "emergency"}
 VALID_LATERALITY = {"left", "right", "bilateral", "none", "midline", "unknown"}
 OMOP_CORE_DOMAINS = {
@@ -47,8 +48,12 @@ OMOP_CORE_DOMAINS = {
     "measurement",
 }
 STANDARD_VOCABULARIES = {
+    "ICD9",
+    "ICD9CM",
+    "ICD9-CM",
     "ICD10",
     "ICD10CM",
+    "ICD10-CM",
     "SNOMED",
     "SNOMEDCT",
     "SNOMED-CT",
@@ -272,6 +277,7 @@ def _clinical_validity(synthetic: list[Record], source: dict[str, Record] | None
         "age_validity": _valid_rate(synthetic, lambda row: not isinstance(row.get("age"), int | float) or 0 <= row["age"] <= 120),
         "non_empty_diagnosis_rate": _valid_rate(synthetic, lambda row: row.get("diagnosis") not in (None, "")),
         "icd10_format_validity": _medical_code_validity(synthetic, "icd10_codes", ICD10_RE),
+        "icd9_format_validity": _medical_code_validity(synthetic, "icd9_codes", ICD9_RE),
         "procedure_completeness": _field_completeness(synthetic, "procedures"),
         "acuity_validity": _choice_validity(synthetic, "acuity", VALID_ACUITY),
         "laterality_validity": _choice_validity(synthetic, "laterality", VALID_LATERALITY),
@@ -369,10 +375,10 @@ def _choice_validity(rows: list[Record], field: str, valid_values: set[str]) -> 
     return sum(1 for row in applicable if str(row.get(field)).strip().lower() in valid_values) / len(applicable)
 
 
-def _medical_code_validity(rows: list[Record], field: str, pattern: re.Pattern[str]) -> float:
+def _medical_code_validity(rows: list[Record], field: str, pattern: re.Pattern[str]) -> float | None:
     applicable = [row for row in rows if row.get(field) not in (None, "")]
     if not applicable:
-        return 1.0
+        return None
     valid_rows = 0
     for row in applicable:
         codes = _split_values(row.get(field))

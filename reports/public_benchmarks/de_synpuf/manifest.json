@@ -1,0 +1,34 @@
+{
+  "dataset_id": "de_synpuf_claims",
+  "dataset_name": "CMS 2008-2010 Data Entrepreneurs' Synthetic Public Use File Sample 1",
+  "domain": "medical",
+  "source": {
+    "landing_page": "https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files",
+    "sample_page": "https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files/cms-2008-2010-data-entrepreneurs-synthetic-public-use-file-de-synpuf/de10-sample-1",
+    "beneficiary_2008_zip": "https://www.cms.gov/research-statistics-data-and-systems/downloadable-public-use-files/synpufs/downloads/de1_0_2008_beneficiary_summary_file_sample_1.zip",
+    "inpatient_2008_2010_zip": "https://www.cms.gov/research-statistics-data-and-systems/downloadable-public-use-files/synpufs/downloads/de1_0_2008_to_2010_inpatient_claims_sample_1.zip",
+    "license_or_terms": "CMS public use data; consult CMS Data Disclaimer and User Agreement"
+  },
+  "source_shape": {
+    "beneficiary_rows_including_header": 116353,
+    "inpatient_rows_including_header": 66774,
+    "exported_inpatient_claim_records": 66773,
+    "native_format": "CSV files distributed as ZIP archives"
+  },
+  "sde_bench_run": {
+    "evaluation_scope": "CMS Sample 1, 2008 beneficiary summary joined to 2008-2010 inpatient claims; internal synthetic-only split",
+    "export_limit": null,
+    "reference_records": 33386,
+    "synthetic_records": 33387,
+    "source_records": 33387,
+    "target": "diagnosis_group",
+    "sensitive_columns": ["sex", "race"],
+    "export_command": "PYTHONPATH=src python -m sde_bench de-synpuf-export --beneficiary data/public_raw/de_synpuf/DE1_0_2008_Beneficiary_Summary_File_Sample_1.csv --inpatient data/public_raw/de_synpuf/DE1_0_2008_to_2010_Inpatient_Claims_Sample_1.csv --out-dir reports/public_benchmarks/de_synpuf --format jsonl",
+    "evaluate_command": "PYTHONPATH=src python -m sde_bench evaluate --real reports/public_benchmarks/de_synpuf/reference.jsonl --synthetic reports/public_benchmarks/de_synpuf/synthetic.jsonl --source reports/public_benchmarks/de_synpuf/source.jsonl --target diagnosis_group --sensitive sex,race --json-out reports/public_benchmarks/de_synpuf/report.json --md-out reports/public_benchmarks/de_synpuf/report.md"
+  },
+  "interpretation_notes": [
+    "DE-SynPUF is fully synthetic; this benchmark uses an internal split because no real reference table is redistributed here.",
+    "The current adapter evaluates inpatient claims only; outpatient, carrier, and prescription event tables can be added as later claims-domain extensions.",
+    "ICD-9-CM diagnosis fields are evaluated with icd9_format_validity; ICD-10 validity is not applicable for this claims sample."
+  ]
+}

@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from .adapters.amlsim import export_amlsim_records
+from .adapters.de_synpuf import export_de_synpuf_records
 from .adapters.health_gym import export_health_gym_art_records
 from .adapters.kmuc import export_kmuc_records
 from .adapters.medsynth import export_medsynth_records
@@ -81,6 +82,14 @@ def main(argv: list[str] | None = None) -> int:
     amlsim_parser.add_argument("--format", choices=["jsonl", "json", "csv"], default="jsonl")
     amlsim_parser.add_argument("--split-fraction", type=float, default=0.5)
     amlsim_parser.add_argument("--limit", type=int, default=None)
+
+    de_synpuf_parser = sub.add_parser("de-synpuf-export", help="export CMS DE-SynPUF claims CSV records to SDE-Bench records")
+    de_synpuf_parser.add_argument("--beneficiary", required=True, type=Path, help="DE-SynPUF beneficiary summary CSV path")
+    de_synpuf_parser.add_argument("--inpatient", required=True, type=Path, help="DE-SynPUF inpatient claims CSV path")
+    de_synpuf_parser.add_argument("--out-dir", required=True, type=Path)
+    de_synpuf_parser.add_argument("--format", choices=["jsonl", "json", "csv"], default="jsonl")
+    de_synpuf_parser.add_argument("--split-fraction", type=float, default=0.5)
+    de_synpuf_parser.add_argument("--limit", type=int, default=None)
 
     cross_parser = sub.add_parser("cross-benchmark", help="build original-paper benchmark cross-evaluation matrix")
     cross_parser.add_argument(
@@ -173,6 +182,24 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "amlsim-export":
         exported = export_amlsim_records(load_records(args.input), split_fraction=args.split_fraction, limit=args.limit)
+        args.out_dir.mkdir(parents=True, exist_ok=True)
+        suffix = f".{args.format}"
+        write_records(exported["reference"], args.out_dir / f"reference{suffix}")
+        write_records(exported["source"], args.out_dir / f"source{suffix}")
+        write_records(exported["synthetic"], args.out_dir / f"synthetic{suffix}")
+        print(
+            f"exported reference={len(exported['reference'])} source={len(exported['source'])} "
+            f"synthetic={len(exported['synthetic'])} to {args.out_dir}"
+        )
+        return 0
+
+    if args.command == "de-synpuf-export":
+        exported = export_de_synpuf_records(
+            load_records(args.beneficiary),
+            load_records(args.inpatient),
+            split_fraction=args.split_fraction,
+            limit=args.limit,
+        )
         args.out_dir.mkdir(parents=True, exist_ok=True)
         suffix = f".{args.format}"
         write_records(exported["reference"], args.out_dir / f"reference{suffix}")

@@ -75,7 +75,9 @@ Designed for clinical case and EHR-like datasets.
 - `age_validity`: if `age` exists, values must be in `[0, 120]`.
 - `non_empty_diagnosis_rate`: non-empty `diagnosis` field rate.
 - `icd10_format_validity`: all provided ICD-10 codes match the ICD-10 code
-  shape.
+  shape. Reported as `n/a` when no ICD-10 field is provided.
+- `icd9_format_validity`: all provided ICD-9/ICD-9-CM codes match the ICD-9
+  claim-code shape. Reported as `n/a` when no ICD-9 field is provided.
 - `procedure_completeness`: non-empty procedure field rate when the field is
   present.
 - `acuity_validity`: acuity belongs to the accepted emergency/elective/routine
@@ -95,8 +97,8 @@ from the overall score.
   `person`, `visit_occurrence`, `condition_occurrence`,
   `procedure_occurrence`, `drug_exposure`, and `measurement`.
 - `standard_vocabulary_rate`: fraction of records whose declared vocabularies
-  are standard clinical vocabularies such as ICD-10, SNOMED CT, LOINC, RxNorm,
-  CPT, or HCPCS.
+  are standard clinical vocabularies such as ICD-9-CM, ICD-10-CM, SNOMED CT,
+  LOINC, RxNorm, CPT, or HCPCS.
 - `temporal_traceability`: fraction of records with parseable event date fields
   such as `encounter_start`, `condition_start`, or `procedure_date`.
 - `relational_integrity`: fraction of records with a patient/case identifier and

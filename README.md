@@ -105,6 +105,17 @@ python3 -m sde_bench amlsim-export \
   --format jsonl
 ```
 
+The DE-SynPUF adapter maps CMS synthetic beneficiary and inpatient claims tables
+into inpatient encounter records:
+
+```bash
+python3 -m sde_bench de-synpuf-export \
+  --beneficiary data/public_raw/de_synpuf/DE1_0_2008_Beneficiary_Summary_File_Sample_1.csv \
+  --inpatient data/public_raw/de_synpuf/DE1_0_2008_to_2010_Inpatient_Claims_Sample_1.csv \
+  --out-dir reports/public_benchmarks/de_synpuf \
+  --format jsonl
+```
+
 For large datasets, nearest-reference privacy distance uses
 `privacy_distance_sample_size` from the selected evaluation config while exact
 duplicate rate and record counts remain full-dataset metrics.
@@ -130,14 +141,16 @@ python3 -m sde_bench cross-benchmark \
   --sde-report SimSUM=reports/public_benchmarks/simsum/report.json \
   --sde-report Synthea=reports/public_benchmarks/synthea/report.json \
   --sde-report HealthGymART=reports/public_benchmarks/health_gym/report.json \
+  --sde-report DeSynPUF=reports/public_benchmarks/de_synpuf/report.json \
   --json-out reports/public_benchmarks/cross_benchmark_matrix.json \
   --md-out reports/public_benchmarks/cross_benchmark_matrix.md
 ```
 
-The cross-benchmark matrix emits a combined Stage A/B table: rows are original
-paper benchmark families, columns are KMUC and public synthetic datasets, and
-each cell reports either a computed value, a paper-reported value, an adapter
-requirement, or a non-applicability reason.
+The cross-benchmark matrix emits two publication-facing stages. Stage A puts
+KMUC and public synthetic datasets under each prior paper's original metric
+family, reporting computed values, paper-reported values, adapter requirements,
+or non-applicability reasons. Stage B then compares all evaluated datasets under
+the common SDE-Bench medical axes.
 
 Public synthetic dataset survey:
 

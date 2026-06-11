@@ -119,6 +119,7 @@ semantic evidence checker is a planned extension.
 age_validity = count(0 <= age <= 120) / count(S)
 non_empty_diagnosis_rate = count(diagnosis present) / count(S)
 icd10_format_validity = count(all ICD-10-like codes valid) / count(rows with codes)
+icd9_format_validity = count(all ICD-9-like codes valid) / count(rows with codes)
 procedure_completeness = count(procedures present) / count(rows with procedure field)
 acuity_validity = count(acuity in allowed vocabulary) / count(rows with acuity)
 laterality_validity = count(laterality in allowed vocabulary) / count(rows with laterality)

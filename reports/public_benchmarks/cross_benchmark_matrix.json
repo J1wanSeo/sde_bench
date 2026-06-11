@@ -38,103 +38,7 @@
       "portability": "Portable to structured EHR/claims datasets; not applicable to pure text datasets."
     }
   },
-  "stage_a": {
-    "kmuc_matching": {
-      "status": "computed",
-      "value": "`dept_top1=0.7467`, `dept_hit@5=0.8800`, `mrr_dept=0.7943`, `proc_coverage@5=0.5889`, `icd_coverage@5=0.5931`",
-      "why": "KMUC was designed for this retrieval/matching task."
-    },
-    "medsynth_dial_note": {
-      "status": "requires_adapter",
-      "value": "n/a",
-      "why": "KMUC has source EMR and lay text, not true doctor-patient dialogue paired with SOAP notes."
-    },
-    "simsum_symptom_ie": {
-      "status": "requires_labels",
-      "value": "n/a",
-      "why": "KMUC is multi-specialty and does not expose dyspnea/cough/pain/nasal/fever labels or spans."
-    },
-    "synthea_structured_ehr": {
-      "status": "not_applicable",
-      "value": "n/a",
-      "why": "KMUC current public benchmark export is case-level JSONL, not longitudinal EHR tables."
-    }
-  },
-  "stage_b": {
-    "kmuc_matching": {
-      "MedSynth": {
-        "status": "not_applicable",
-        "value": "n/a: no expected department or doctor index"
-      },
-      "SimSUM": {
-        "status": "not_applicable",
-        "value": "n/a: respiratory symptoms only, no department labels"
-      },
-      "Synthea": {
-        "status": "not_applicable",
-        "value": "n/a: structured EHR lacks KMUC doctor/procedure retrieval labels"
-      },
-      "HealthGymART": {
-        "status": "not_applicable",
-        "value": "n/a: no expected department or doctor index"
-      }
-    },
-    "medsynth_dial_note": {
-      "MedSynth": {
-        "status": "paper_reported",
-        "value": "Dial-2-Note `60.0%/95.0%/52.5%`; Note-2-Dial `55.0%/87.5%/80.0%` jury preference"
-      },
-      "SimSUM": {
-        "status": "not_applicable",
-        "value": "n/a: no dialogue-note pairs"
-      },
-      "Synthea": {
-        "status": "not_applicable",
-        "value": "n/a: no dialogue-note pairs"
-      },
-      "HealthGymART": {
-        "status": "not_applicable",
-        "value": "n/a: no dialogue-note pairs"
-      }
-    },
-    "simsum_symptom_ie": {
-      "MedSynth": {
-        "status": "not_applicable",
-        "value": "n/a: no gold dyspnea/cough/pain/nasal/fever labels"
-      },
-      "SimSUM": {
-        "status": "paper_reported",
-        "value": "normal F1 dyspnea `0.9617`, cough `0.9603`, pain `0.8143`, nasal `0.9628`, fever `0.9096`; compact F1 dyspnea `0.9444`, cough `0.9397`, pain `0.7940`, nasal `0.9622`, fever `0.9010`"
-      },
-      "Synthea": {
-        "status": "requires_adapter",
-        "value": "derive respiratory symptoms from Synthea conditions/observations"
-      },
-      "HealthGymART": {
-        "status": "not_applicable",
-        "value": "n/a: longitudinal HIV ART data lacks respiratory symptom labels"
-      }
-    },
-    "synthea_structured_ehr": {
-      "MedSynth": {
-        "status": "not_applicable",
-        "value": "n/a: no interoperability fields"
-      },
-      "SimSUM": {
-        "status": "not_applicable",
-        "value": "n/a: no interoperability fields"
-      },
-      "Synthea": {
-        "status": "computed_from_sde_bench",
-        "value": "`medical_interoperability=1.0000`"
-      },
-      "HealthGymART": {
-        "status": "computed_from_sde_bench",
-        "value": "`medical_interoperability=0.9583`"
-      }
-    }
-  },
-  "stage_ab": {
+  "stage_a_original": {
     "kmuc_matching": {
       "KMUC": {
         "status": "computed",
@@ -156,6 +60,10 @@
       "HealthGymART": {
         "status": "not_applicable",
         "value": "n/a: no expected department or doctor index"
+      },
+      "DeSynPUF": {
+        "status": "not_applicable",
+        "value": "n/a: claims tables lack KMUC doctor/procedure retrieval labels"
       }
     },
     "medsynth_dial_note": {
@@ -177,6 +85,10 @@
         "value": "n/a: no dialogue-note pairs"
       },
       "HealthGymART": {
+        "status": "not_applicable",
+        "value": "n/a: no dialogue-note pairs"
+      },
+      "DeSynPUF": {
         "status": "not_applicable",
         "value": "n/a: no dialogue-note pairs"
       }
@@ -202,6 +114,10 @@
       "HealthGymART": {
         "status": "not_applicable",
         "value": "n/a: longitudinal HIV ART data lacks respiratory symptom labels"
+      },
+      "DeSynPUF": {
+        "status": "not_applicable",
+        "value": "n/a: claims data lacks respiratory symptom labels"
       }
     },
     "synthea_structured_ehr": {
@@ -225,10 +141,14 @@
       "HealthGymART": {
         "status": "computed_from_sde_bench",
         "value": "`medical_interoperability=0.9583`"
+      },
+      "DeSynPUF": {
+        "status": "computed_from_sde_bench",
+        "value": "`medical_interoperability=0.9165`"
       }
     }
   },
-  "stage_c": {
+  "stage_b_sde": {
     "KMUC": {
       "overall": 0.8091972103490085,
       "medical_fidelity": 1.0,
@@ -283,6 +203,17 @@
       "clinical_groundedness": 1.0,
       "clinical_validity": 1.0,
       "medical_interoperability": 0.9583333333333334
+    },
+    "DeSynPUF": {
+      "overall": 0.8817081796385942,
+      "medical_fidelity": 0.5969448613883596,
+      "clinical_task_utility": 0.9991913020037739,
+      "privacy": 0.7537736547095412,
+      "equity": 0.9200643840609725,
+      "medical_diversity": 0.9278790924954515,
+      "clinical_groundedness": 1.0,
+      "clinical_validity": 0.9393476502830442,
+      "medical_interoperability": 0.9164644921676102
     }
   },
   "source_notes": [
@@ -291,6 +222,7 @@
     "Synthea generator/sample page: https://synthetichealth.github.io/synthea/",
     "Synthea JAMIA paper: https://academic.oup.com/jamia/article/25/3/230/4098271",
     "Health Gym ART for HIV dataset: https://doi.org/10.6084/m9.figshare.22827878.v1",
-    "Health Gym Scientific Data paper: https://www.nature.com/articles/s41597-022-01784-7"
+    "Health Gym Scientific Data paper: https://www.nature.com/articles/s41597-022-01784-7",
+    "CMS DE-SynPUF downloads: https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files"
   ]
 }

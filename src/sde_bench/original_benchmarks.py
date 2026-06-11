@@ -44,7 +44,7 @@ BENCHMARK_FAMILIES: dict[str, Report] = {
     },
 }
 
-DATASET_COLUMNS = ["KMUC", "MedSynth", "SimSUM", "Synthea", "HealthGymART"]
+DATASET_COLUMNS = ["KMUC", "MedSynth", "SimSUM", "Synthea", "HealthGymART", "DeSynPUF"]
 
 STAGE_A: dict[str, Report] = {
     "kmuc_matching": {
@@ -75,6 +75,7 @@ STAGE_B: dict[str, dict[str, Report]] = {
         "SimSUM": {"status": "not_applicable", "value": "n/a: respiratory symptoms only, no department labels"},
         "Synthea": {"status": "not_applicable", "value": "n/a: structured EHR lacks KMUC doctor/procedure retrieval labels"},
         "HealthGymART": {"status": "not_applicable", "value": "n/a: no expected department or doctor index"},
+        "DeSynPUF": {"status": "not_applicable", "value": "n/a: claims tables lack KMUC doctor/procedure retrieval labels"},
     },
     "medsynth_dial_note": {
         "MedSynth": {
@@ -84,6 +85,7 @@ STAGE_B: dict[str, dict[str, Report]] = {
         "SimSUM": {"status": "not_applicable", "value": "n/a: no dialogue-note pairs"},
         "Synthea": {"status": "not_applicable", "value": "n/a: no dialogue-note pairs"},
         "HealthGymART": {"status": "not_applicable", "value": "n/a: no dialogue-note pairs"},
+        "DeSynPUF": {"status": "not_applicable", "value": "n/a: no dialogue-note pairs"},
     },
     "simsum_symptom_ie": {
         "MedSynth": {"status": "not_applicable", "value": "n/a: no gold dyspnea/cough/pain/nasal/fever labels"},
@@ -93,12 +95,14 @@ STAGE_B: dict[str, dict[str, Report]] = {
         },
         "Synthea": {"status": "requires_adapter", "value": "derive respiratory symptoms from Synthea conditions/observations"},
         "HealthGymART": {"status": "not_applicable", "value": "n/a: longitudinal HIV ART data lacks respiratory symptom labels"},
+        "DeSynPUF": {"status": "not_applicable", "value": "n/a: claims data lacks respiratory symptom labels"},
     },
     "synthea_structured_ehr": {
         "MedSynth": {"status": "not_applicable", "value": "n/a: text pair dataset"},
         "SimSUM": {"status": "not_applicable", "value": "n/a: single-encounter tabular/text benchmark"},
         "Synthea": {"status": "computed_from_sde_bench", "value": ""},
         "HealthGymART": {"status": "computed_from_sde_bench", "value": ""},
+        "DeSynPUF": {"status": "computed_from_sde_bench", "value": ""},
     },
 }
 
@@ -109,29 +113,28 @@ SOURCE_NOTES = [
     "Synthea JAMIA paper: https://academic.oup.com/jamia/article/25/3/230/4098271",
     "Health Gym ART for HIV dataset: https://doi.org/10.6084/m9.figshare.22827878.v1",
     "Health Gym Scientific Data paper: https://www.nature.com/articles/s41597-022-01784-7",
+    "CMS DE-SynPUF downloads: https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files",
 ]
 
 
 def build_cross_benchmark_report(sde_reports: dict[str, Report]) -> Report:
-    stage_b = {family: {dataset: dict(cell) for dataset, cell in cells.items()} for family, cells in STAGE_B.items()}
+    original_public = {family: {dataset: dict(cell) for dataset, cell in cells.items()} for family, cells in STAGE_B.items()}
     for dataset, report in sde_reports.items():
-        if dataset in stage_b["synthea_structured_ehr"]:
+        if dataset in original_public["synthea_structured_ehr"]:
             score = _axis_score(report, "medical_interoperability")
-            stage_b["synthea_structured_ehr"][dataset]["value"] = (
+            original_public["synthea_structured_ehr"][dataset]["value"] = (
                 f"`medical_interoperability={score:.4f}`" if score is not None else "n/a: no interoperability fields"
             )
-    stage_ab = _combined_original_matrix(stage_b)
-    stage_c = {
+    stage_a_original = _combined_original_matrix(original_public)
+    stage_b_sde = {
         dataset: _sde_summary(report)
         for dataset, report in sde_reports.items()
     }
     return {
         "schema_version": "0.1.0",
         "benchmark_families": BENCHMARK_FAMILIES,
-        "stage_a": STAGE_A,
-        "stage_b": stage_b,
-        "stage_ab": stage_ab,
-        "stage_c": stage_c,
+        "stage_a_original": stage_a_original,
+        "stage_b_sde": stage_b_sde,
         "source_notes": SOURCE_NOTES,
     }
 
@@ -142,21 +145,20 @@ def markdown_cross_benchmark(report: Report) -> str:
         "",
         "This report separates two evaluation layers that should both appear in the paper:",
         "",
-        "1. **SDE-Bench layer**: run every public synthetic medical dataset through the same SDE-Bench axes.",
-        "2. **Original-benchmark layer**: treat each dataset paper's own evaluation protocol as a benchmark family, "
+        "1. **Original-benchmark layer**: treat each dataset paper's own evaluation protocol as a benchmark family, "
         "then test KMUC and the other public datasets against those protocols when the required fields exist.",
+        "2. **SDE-Bench layer**: run every public synthetic medical dataset through the same SDE-Bench axes.",
         "",
-        "The second layer is stronger for publication because it avoids evaluating prior work only with our proposed "
-        "metrics. It also exposes where each prior benchmark is narrow, task-specific, or not portable across dataset "
-        "types.",
+        "The first layer is stronger for publication because it avoids evaluating prior work only with our proposed "
+        "metrics. The second layer then explains the common medical synthetic-data profile across heterogeneous "
+        "dataset types.",
         "",
         "## Stage Definitions",
         "",
         "| Stage | Question | Rows | Columns |",
         "|---|---|---|---|",
-        "| Stage A | How does KMUC perform under each prior dataset's original benchmark? | Original benchmark families | KMUC result and applicability |",
-        "| Stage B | Under the same original benchmark, how do other public synthetic datasets perform? | Original benchmark families | MedSynth, SimSUM, Synthea, and future datasets |",
-        "| Stage C | How do all datasets compare under SDE-Bench? | Datasets | SDE-Bench axes and overall score |",
+        "| Stage A | How do KMUC and public datasets perform under each prior dataset's original benchmark? | Original benchmark families | KMUC plus public synthetic datasets |",
+        "| Stage B | How do all datasets compare under SDE-Bench? | Datasets | SDE-Bench axes and overall score |",
         "",
         "## Original Benchmark Families",
         "",
@@ -168,40 +170,30 @@ def markdown_cross_benchmark(report: Report) -> str:
             f"| `{key}` | {family['origin_dataset']} | {family['native_task']} | {family['core_metric']} | "
             f"{family['metric_formula']} | {family['required_inputs']} | {family['portability']} |"
         )
-    combined_datasets = _dataset_columns(report["stage_ab"])
+    combined_datasets = _dataset_columns(report["stage_a_original"])
     lines.extend(
         [
             "",
-            "## Stage A/B Combined: Prior Benchmarks Across Datasets",
+            "## Stage A: Original-Metric Crosswalk",
             "",
             "| Benchmark Family | " + " | ".join(combined_datasets) + " |",
             "|---" + "|---:" * len(combined_datasets) + "|",
         ]
     )
-    for key, cells in report["stage_ab"].items():
+    for key, cells in report["stage_a_original"].items():
         rendered = [_render_cell(cells[dataset]) for dataset in combined_datasets]
-        lines.append(f"| `{key}` | " + " | ".join(rendered) + " |")
-
-    lines.extend(["", "## Stage A: KMUC Under Prior Benchmarks", "", "| Benchmark Family | KMUC Status | Current Result | Why |", "|---|---|---:|---|"])
-    for key, cell in report["stage_a"].items():
-        lines.append(f"| `{key}` | {cell['status']} | {cell['value']} | {cell['why']} |")
-
-    datasets = _dataset_columns(report["stage_b"], include_kmuc=False)
-    lines.extend(["", "## Stage B: Public Datasets Under Prior Benchmarks", "", "| Benchmark Family | " + " | ".join(datasets) + " |", "|---" + "|---:" * len(datasets) + "|"])
-    for key, cells in report["stage_b"].items():
-        rendered = [_render_cell(cells[dataset]) for dataset in datasets]
         lines.append(f"| `{key}` | " + " | ".join(rendered) + " |")
 
     lines.extend(
         [
             "",
-            "## Stage C: SDE-Bench Cross-Dataset Results",
+            "## Stage B: SDE-Bench Cross-Dataset Results",
             "",
             "| Dataset | Overall | Fidelity | Utility | Privacy | Equity | Diversity | Groundedness | Validity | Interoperability |",
             "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
         ]
     )
-    for dataset, summary in report["stage_c"].items():
+    for dataset, summary in report["stage_b_sde"].items():
         lines.append(
             f"| {dataset} | {_fmt(summary['overall'])} | {_fmt(summary['medical_fidelity'])} | "
             f"{_fmt(summary['clinical_task_utility'])} | {_fmt(summary['privacy'])} | {_fmt(summary['equity'])} | "
@@ -216,9 +208,9 @@ def markdown_cross_benchmark(report: Report) -> str:
             "",
             "1. Keep each original paper protocol as a versioned benchmark family with explicit formula, required "
             "inputs, and applicability rules.",
-            "2. Add executable dataset-to-benchmark view adapters for cells currently marked `requires_adapter` or "
+            "2. Add executable dataset-to-original-benchmark adapters for cells currently marked `requires_adapter` or "
             "`requires_labels`.",
-            "3. For each Stage A/B cell, emit one of four states: `computed`, `paper_reported`, `requires_adapter`, "
+            "3. For each Stage A cell, emit one of four states: `computed`, `paper_reported`, `requires_adapter`, "
             "or `not_applicable`.",
             "4. Compare numeric cells only when the same benchmark family, data split, and required labels are present. "
             "Otherwise, report the applicability state as part of the result.",
