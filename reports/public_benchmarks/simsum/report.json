@@ -16,7 +16,7 @@
       }
     },
     "clinical_task_utility": {
-      "score": 1.0,
+      "score": null,
       "metrics": {
         "target_population_rate": 1.0
       }
@@ -76,13 +76,13 @@
     "clinical_validity": {
       "score": 1.0,
       "metrics": {
-        "age_validity": 1.0,
+        "age_validity": null,
         "non_empty_diagnosis_rate": 1.0,
         "icd10_format_validity": null,
         "icd9_format_validity": null,
-        "procedure_completeness": 1.0,
-        "acuity_validity": 1.0,
-        "laterality_validity": 1.0,
+        "procedure_completeness": null,
+        "acuity_validity": null,
+        "laterality_validity": null,
         "diagnosis_source_overlap": 1.0
       }
     },
@@ -93,7 +93,7 @@
       }
     }
   },
-  "overall_score": 0.7020645621416522,
+  "overall_score": 0.6524086558319276,
   "skipped": [
     "equity.group_metrics: provide sensitive columns such as sex/gender/race",
     "medical_interoperability: provide OMOP/FHIR/CSV-derived interoperability fields"

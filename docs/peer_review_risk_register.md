@@ -94,10 +94,25 @@ the same problem.
 - Report domain, native format, target, sensitive columns, and skipped axes for
 each dataset.
 
+## 8. "This is not yet equivalent to every prior paper's own benchmark."
+
+Risk: A reviewer can argue that Stage A is a crosswalk rather than a full
+paper-equivalent benchmark matrix because some cells are `requires_adapter`,
+`requires_labels`, or `sde_proxy`.
+
+Mitigation:
+
+- Add a publication-readiness gate to the generated cross-benchmark report.
+- Count only `computed` and `paper_reported` cells as paper-equivalent evidence.
+- State that the current package is an executable profile plus original-metric
+crosswalk until adapter and label gaps are closed.
+
 ## Recommended Reviewer-Safe Claim
 
-SDE-Bench provides a structured axis-level profile for heterogeneous synthetic
-medical datasets. It does not prove that one dataset is universally superior.
-In the current evidence, KMUC is strongest on clinical scope breadth and
-patient-facing department-matching utility, while structured public baselines
-remain stronger on longitudinal or interoperability-oriented axes.
+SDE-Bench provides a structured axis-level profile and original-metric crosswalk
+for heterogeneous synthetic medical datasets. It does not prove that one dataset
+is universally superior. In the current evidence, KMUC is strongest on clinical
+scope breadth and patient-facing department-matching utility, while structured
+public baselines remain stronger on longitudinal or interoperability-oriented
+axes. Full paper-equivalent benchmark claims should be limited to cells marked
+`computed` or `paper_reported`.

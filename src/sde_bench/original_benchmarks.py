@@ -133,11 +133,13 @@ def build_cross_benchmark_report(sde_reports: dict[str, Report], *, original_rep
         dataset: _sde_summary(report)
         for dataset, report in sde_reports.items()
     }
+    publication_readiness = _publication_readiness(stage_a_original)
     return {
         "schema_version": "0.1.0",
         "benchmark_families": BENCHMARK_FAMILIES,
         "stage_a_original": stage_a_original,
         "stage_b_sde": stage_b_sde,
+        "publication_readiness": publication_readiness,
         "source_notes": SOURCE_NOTES,
     }
 
@@ -226,6 +228,30 @@ def markdown_cross_benchmark(report: Report) -> str:
         ]
     )
 
+    readiness = report.get("publication_readiness", {})
+    lines.extend(
+        [
+            "",
+            "## Publication Readiness Gate",
+            "",
+            f"Current status: `{readiness.get('claim_status', 'unknown')}`.",
+            "",
+            readiness.get("interpretation", ""),
+            "",
+            "| Gate | Status | Evidence |",
+            "|---|---|---|",
+        ]
+    )
+    for gate in readiness.get("gates", []):
+        lines.append(f"| {gate['name']} | `{gate['status']}` | {gate['evidence']} |")
+    lines.extend(
+        [
+            "",
+            "SDE-derived proxy cells are not counted as original-paper evidence. "
+            "They can support interoperability compatibility claims, but not a full paper-equivalent benchmark claim.",
+        ]
+    )
+
     lines.extend(["", "## Source Notes", ""])
     lines.extend(f"- {note}" for note in report.get("source_notes", []))
     lines.append("")
@@ -254,6 +280,107 @@ def _combined_original_matrix(stage_b: dict[str, dict[str, Report]]) -> dict[str
         cells.update({dataset: dict(cell) for dataset, cell in stage_b.get(family, {}).items()})
         matrix[family] = cells
     return matrix
+
+
+def _publication_readiness(stage_a_original: dict[str, dict[str, Report]]) -> Report:
+    paper_equivalent_statuses = ["computed", "paper_reported"]
+    proxy_statuses = ["sde_proxy"]
+    blocking_statuses = ["requires_adapter", "requires_labels"]
+    evidence_counts = {
+        "paper_equivalent_cells": 0,
+        "proxy_cells": 0,
+        "blocking_cells": 0,
+    }
+    status_counts: dict[str, int] = {}
+    for cells in stage_a_original.values():
+        for cell in cells.values():
+            status = str(cell.get("status", "unknown"))
+            value = str(cell.get("value", ""))
+            has_evidence_value = value not in {"", "n/a"} and not value.startswith("n/a: ")
+            if status in paper_equivalent_statuses and has_evidence_value:
+                evidence_counts["paper_equivalent_cells"] += 1
+                status_counts[status] = status_counts.get(status, 0) + 1
+            elif status in proxy_statuses and has_evidence_value:
+                evidence_counts["proxy_cells"] += 1
+                status_counts[status] = status_counts.get(status, 0) + 1
+            elif status in blocking_statuses:
+                evidence_counts["blocking_cells"] += 1
+                status_counts[status] = status_counts.get(status, 0) + 1
+
+    protocol_fields = ["core_metric", "metric_formula", "required_inputs", "applicability_rule"]
+    protocols_versioned = all(
+        all(family.get(field) for field in protocol_fields)
+        for family in BENCHMARK_FAMILIES.values()
+    )
+    has_computed_original = any(
+        str(cell.get("status")) == "computed" and str(cell.get("value", "")) not in {"", "n/a"}
+        for cells in stage_a_original.values()
+        for cell in cells.values()
+    )
+    has_paper_reported_baselines = any(
+        str(cell.get("status")) == "paper_reported" and str(cell.get("value", "")) not in {"", "n/a"}
+        for cells in stage_a_original.values()
+        for cell in cells.values()
+    )
+    proxy_separated = "sde_proxy" not in paper_equivalent_statuses
+    no_adapter_gaps = evidence_counts["blocking_cells"] == 0
+    full_equivalence_ready = (
+        protocols_versioned
+        and has_computed_original
+        and has_paper_reported_baselines
+        and proxy_separated
+        and no_adapter_gaps
+    )
+    gates = [
+        {
+            "name": "Versioned original protocols",
+            "status": "pass" if protocols_versioned else "fail",
+            "evidence": "Every benchmark family has formula, required inputs, and applicability rules.",
+        },
+        {
+            "name": "Executable original metric",
+            "status": "pass" if has_computed_original else "fail",
+            "evidence": f"{evidence_counts['paper_equivalent_cells']} paper-equivalent cells are available.",
+        },
+        {
+            "name": "Prior-paper baseline evidence",
+            "status": "pass" if has_paper_reported_baselines else "fail",
+            "evidence": "Paper-reported cells are preserved separately from SDE-Bench scores.",
+        },
+        {
+            "name": "Proxy separation",
+            "status": "pass" if proxy_separated else "fail",
+            "evidence": f"{evidence_counts['proxy_cells']} SDE-derived proxy cells are excluded from paper-equivalent evidence.",
+        },
+        {
+            "name": "Adapter completeness",
+            "status": "pass" if no_adapter_gaps else "fail",
+            "evidence": f"{evidence_counts['blocking_cells']} cells still require adapters or labels.",
+        },
+    ]
+    if full_equivalence_ready:
+        interpretation = (
+            "The matrix is ready to support a full paper-equivalent benchmark claim, "
+            "subject to reporting the same data splits and required labels."
+        )
+        claim_status = "ready_for_full_equivalence"
+    else:
+        interpretation = (
+            "The matrix is not ready for a full paper-equivalent benchmark claim. "
+            "It supports a weaker claim: SDE-Bench provides an executable axis-level profile and an original-metric crosswalk, "
+            "while remaining adapters and labels define the validation work still needed."
+        )
+        claim_status = "not_ready_for_full_equivalence"
+    return {
+        "claim_status": claim_status,
+        "interpretation": interpretation,
+        "paper_equivalent_statuses": paper_equivalent_statuses,
+        "proxy_statuses": proxy_statuses,
+        "blocking_statuses": blocking_statuses,
+        "status_counts": status_counts,
+        "evidence_counts": evidence_counts,
+        "gates": gates,
+    }
 
 
 def _apply_original_reports(stage_a_original: dict[str, dict[str, Report]], original_reports: dict[str, Report]) -> None:

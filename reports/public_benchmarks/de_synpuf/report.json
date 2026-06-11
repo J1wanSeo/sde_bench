@@ -16,7 +16,7 @@
       }
     },
     "clinical_task_utility": {
-      "score": 0.9991913020037739,
+      "score": null,
       "metrics": {
         "target_population_rate": 0.9991913020037739
       }
@@ -76,15 +76,15 @@
       }
     },
     "clinical_validity": {
-      "score": 0.9393476502830442,
+      "score": 0.915086710396262,
       "metrics": {
         "age_validity": 1.0,
         "non_empty_diagnosis_rate": 0.9991913020037739,
         "icd10_format_validity": null,
         "icd9_format_validity": 1.0,
         "procedure_completeness": 0.5762422499775361,
-        "acuity_validity": 1.0,
-        "laterality_validity": 1.0,
+        "acuity_validity": null,
+        "laterality_validity": null,
         "diagnosis_source_overlap": 1.0
       }
     },
@@ -98,7 +98,7 @@
       }
     }
   },
-  "overall_score": 0.8743645586010547,
+  "overall_score": 0.855728598189867,
   "skipped": [],
   "name": "synthetic"
 }

@@ -31,14 +31,14 @@ Input size:
 | Axis | Score | Meaning |
 |---|---:|---|
 | `medical_fidelity` | 1.0000 | Structured fields copied through the adapter preserve the reference distribution exactly. This is a structural-field result, not a natural-language realism score. |
-| `clinical_task_utility` | 0.8733 | Department matching remains useful: `label_accuracy=0.7467` on 150 predicted lay cases, with target field present for all records. |
+| `clinical_task_utility` | 0.7467 | Department matching remains useful: `label_accuracy=0.7467` on 150 predicted lay cases. Target-field presence is reported as metadata, not counted as utility. |
 | `privacy` | 0.5000 | No exact duplicate fingerprints were found, but nearest-reference distance is zero because structured fields are retained from source cases. This flags source closeness. |
 | `equity` | 0.8474 | Sex distribution is preserved (`1.0000`), while department distribution differs across sex groups (`group_target_parity=0.6949`). |
 | `medical_diversity` | 1.0000 | The synthetic set covers the reference categorical support and has unique text records. |
 | `clinical_scope_breadth` | 0.9770 | The dataset spans broad departments, diagnosis groups, procedure labels, age/sex groups, scenarios, and task signals. This is the main axis separating KMUC from narrow disease-specific synthetic datasets. |
 | `clinical_groundedness` | 0.5028 | Every record has source attribution, but lexical evidence overlap is low (`0.0056`) because Korean lay text is compared against abbreviated mixed-language EMR text. |
 | `clinical_validity` | 0.9408 | Age, diagnosis, ICD-10 shape, acuity, laterality, department, and diagnosis-source checks mostly pass; procedure completeness is lower (`0.5267`). |
-| `overall_score` | 0.8302 | Mean of the eight available axis scores. Use it only as a compact summary, not as the core scientific claim. |
+| `overall_score` | 0.8143 | Mean of the eight available axis scores. Use it only as a compact summary, not as the core scientific claim. |
 
 ## Paper-Level Reading
 

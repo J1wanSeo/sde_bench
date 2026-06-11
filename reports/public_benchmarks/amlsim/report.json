@@ -4,7 +4,7 @@
     "real": 22,
     "synthetic": 23
   },
-  "config": "core_eval",
+  "config": "full_eval",
   "axes": {
     "medical_fidelity": {
       "score": 0.491600790513834,
@@ -16,7 +16,7 @@
       }
     },
     "clinical_task_utility": {
-      "score": 1.0,
+      "score": null,
       "metrics": {
         "target_population_rate": 1.0
       }
@@ -46,11 +46,57 @@
         "unique_record_ratio": 1.0,
         "categorical_columns": 4
       }
+    },
+    "clinical_scope_breadth": {
+      "score": 0.0,
+      "metrics": {
+        "department_scope": 0.0,
+        "department_unique": 0,
+        "diagnosis_scope": 0.0,
+        "diagnosis_unique": 0,
+        "procedure_scope": 0.0,
+        "procedure_unique": 0,
+        "demographic_scope": 0.0,
+        "age_group_unique": 0,
+        "sex_or_gender_unique": 0,
+        "scenario_scope": 0.0,
+        "scenario_unique": 0,
+        "task_scope": 0.0,
+        "task_signal_unique": 0
+      }
+    },
+    "clinical_groundedness": {
+      "score": 1.0,
+      "metrics": {
+        "source_attribution_rate": 1.0,
+        "evidence_support_score": null,
+        "evidence_support_n": 0
+      }
+    },
+    "clinical_validity": {
+      "score": 0.0,
+      "metrics": {
+        "age_validity": null,
+        "non_empty_diagnosis_rate": 0.0,
+        "icd10_format_validity": null,
+        "icd9_format_validity": null,
+        "procedure_completeness": null,
+        "acuity_validity": null,
+        "laterality_validity": null
+      }
+    },
+    "medical_interoperability": {
+      "score": null,
+      "metrics": {
+        "skipped": "no_interoperability_fields"
+      }
     }
   },
-  "overall_score": 0.761250076416361,
+  "overall_score": 0.5075000509442407,
   "skipped": [
     "equity.group_metrics: provide sensitive columns such as sex/gender/race",
+    "clinical_groundedness.source_validation: provide --source for source_id validation",
+    "clinical_validity.source_field_checks: provide --source",
     "medical_interoperability: provide OMOP/FHIR/CSV-derived interoperability fields"
   ],
   "name": "synthetic"

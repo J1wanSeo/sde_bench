@@ -1,0 +1,76 @@
+{
+  "schema_version": "0.1.0",
+  "records": {
+    "real": 406,
+    "synthetic": 1170
+  },
+  "config": "smc_layquery",
+  "axes": {
+    "medical_fidelity": {
+      "score": 0.9798282177592522,
+      "metrics": {
+        "column_similarity": 0.9798282177592522,
+        "pairwise_similarity": null,
+        "columns_compared": 1,
+        "pairs_compared": 0
+      }
+    },
+    "clinical_task_utility": {
+      "score": null,
+      "metrics": {}
+    },
+    "privacy": {
+      "score": 0.5,
+      "metrics": {
+        "exact_duplicate_rate": 0.0,
+        "median_distance_to_reference": 0.0,
+        "records_compared": 1170,
+        "distance_synthetic_records": 1000,
+        "distance_reference_records": 406,
+        "distance_sampled": true
+      }
+    },
+    "medical_diversity": {
+      "score": 0.8600684339432766,
+      "metrics": {
+        "category_coverage": 1.0,
+        "entropy_ratio": 0.9998634214879494,
+        "unique_record_ratio": 0.5803418803418804,
+        "categorical_columns": 1
+      }
+    },
+    "clinical_scope_breadth": {
+      "score": 0.4375,
+      "metrics": {
+        "department_scope": 1.0,
+        "department_unique": 23,
+        "diagnosis_scope": 0.0,
+        "diagnosis_unique": 0,
+        "procedure_scope": 0.0,
+        "procedure_unique": 0,
+        "demographic_scope": 0.0,
+        "age_group_unique": 0,
+        "sex_or_gender_unique": 0,
+        "scenario_scope": 0.75,
+        "scenario_unique": 3,
+        "task_scope": 0.875,
+        "task_signal_unique": 3
+      }
+    },
+    "clinical_groundedness": {
+      "score": 0.5078645476081374,
+      "metrics": {
+        "source_attribution_rate": 1.0,
+        "evidence_support_score": 0.015729095216274705,
+        "evidence_support_n": 1170
+      }
+    }
+  },
+  "overall_score": 0.6570522398621332,
+  "skipped": [
+    "clinical_task_utility.target_population_rate: provide --target",
+    "equity.group_metrics: provide sensitive columns such as sex/gender/race",
+    "medical_interoperability: provide OMOP/FHIR/CSV-derived interoperability fields"
+  ],
+  "name": "SMC"
+}

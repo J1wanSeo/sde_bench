@@ -192,8 +192,12 @@ def _utility(synthetic: list[Record], target: str | None) -> dict[str, Any]:
         metrics["label_support"] = total
     if target:
         metrics["target_population_rate"] = _population_rate(synthetic, target)
-    score_values = [metrics[key] for key in ("label_accuracy", "target_population_rate") if isinstance(metrics.get(key), int | float)]
-    return {"score": _mean(score_values), "metrics": metrics}
+    # Utility = downstream task accuracy. target_population_rate (mere column
+    # presence) is reported as a metric but is NOT task performance, so it does
+    # not constitute the axis score. Without predicted_* labels utility is n/a.
+    acc = metrics.get("label_accuracy")
+    score = acc if isinstance(acc, int | float) and not isinstance(acc, bool) else None
+    return {"score": score, "metrics": metrics}
 
 
 def _privacy(real: list[Record], synthetic: list[Record], *, sample_size: Any = None) -> dict[str, Any]:
@@ -315,7 +319,7 @@ def _groundedness(synthetic: list[Record], source: dict[str, Record] | None) -> 
 
 def _clinical_validity(synthetic: list[Record], source: dict[str, Record] | None) -> dict[str, Any]:
     metrics: dict[str, Any] = {
-        "age_validity": _valid_rate(synthetic, lambda row: not isinstance(row.get("age"), int | float) or 0 <= row["age"] <= 120),
+        "age_validity": _age_validity(synthetic),
         "non_empty_diagnosis_rate": _valid_rate(synthetic, lambda row: row.get("diagnosis") not in (None, "")),
         "icd10_format_validity": _medical_code_validity(synthetic, "icd10_codes", ICD10_RE),
         "icd9_format_validity": _medical_code_validity(synthetic, "icd9_codes", ICD9_RE),
@@ -339,7 +343,15 @@ def _clinical_validity(synthetic: list[Record], source: dict[str, Record] | None
                 _token_support(str(row.get("diagnosis", "")), str(source[str(row.get("source_id"))].get("diagnosis", "")))
                 for row in dx_rows
             )
-    return {"score": _mean(v for v in metrics.values() if isinstance(v, int | float)), "metrics": metrics}
+    numeric = [v for v in metrics.values() if isinstance(v, int | float) and not isinstance(v, bool)]
+    return {"score": _mean(numeric) if numeric else None, "metrics": metrics}
+
+
+def _age_validity(rows: list[Record]) -> float | None:
+    ages = [row for row in rows if isinstance(row.get("age"), int | float) and not isinstance(row.get("age"), bool)]
+    if not ages:
+        return None
+    return sum(1 for row in ages if 0 <= row["age"] <= 120) / len(ages)
 
 
 def _medical_interoperability(synthetic: list[Record]) -> dict[str, Any]:
@@ -468,17 +480,17 @@ def _age_bin(value: Any) -> str:
     return "oldest_adult"
 
 
-def _field_completeness(rows: list[Record], field: str) -> float:
+def _field_completeness(rows: list[Record], field: str) -> float | None:
     applicable = [row for row in rows if field in row]
     if not applicable:
-        return 1.0
+        return None
     return sum(1 for row in applicable if _split_values(row.get(field))) / len(applicable)
 
 
-def _choice_validity(rows: list[Record], field: str, valid_values: set[str]) -> float:
+def _choice_validity(rows: list[Record], field: str, valid_values: set[str]) -> float | None:
     applicable = [row for row in rows if row.get(field) not in (None, "")]
     if not applicable:
-        return 1.0
+        return None
     return sum(1 for row in applicable if str(row.get(field)).strip().lower() in valid_values) / len(applicable)
 
 

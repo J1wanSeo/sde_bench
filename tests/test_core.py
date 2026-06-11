@@ -855,6 +855,41 @@ class SdeBenchCliTests(unittest.TestCase):
         self.assertIn("HealthGymART", rendered)
         self.assertIn("DeSynPUF", rendered)
 
+    def test_cross_benchmark_readiness_does_not_count_sde_proxy_as_paper_equivalent(self) -> None:
+        reports = {
+            "KMUC": {
+                "overall_score": 0.8,
+                "axes": {
+                    "medical_interoperability": {"score": None},
+                },
+            },
+            "Synthea": {
+                "overall_score": 0.82,
+                "axes": {
+                    "medical_interoperability": {"score": 1.0},
+                },
+            },
+            "HealthGymART": {
+                "overall_score": 0.93,
+                "axes": {
+                    "medical_interoperability": {"score": 0.9583333333333334},
+                },
+            },
+        }
+
+        report = build_cross_benchmark_report(reports)
+        readiness = report["publication_readiness"]
+        rendered = markdown_cross_benchmark(report)
+
+        self.assertEqual(readiness["claim_status"], "not_ready_for_full_equivalence")
+        self.assertEqual(readiness["status_counts"]["sde_proxy"], 2)
+        self.assertEqual(readiness["evidence_counts"]["paper_equivalent_cells"], 3)
+        self.assertNotIn("sde_proxy", readiness["paper_equivalent_statuses"])
+        self.assertIn("requires_adapter", readiness["blocking_statuses"])
+        self.assertIn("Publication Readiness Gate", rendered)
+        self.assertIn("not ready for a full paper-equivalent benchmark claim", rendered)
+        self.assertIn("SDE-derived proxy cells are not counted as original-paper evidence", rendered)
+
     def test_cli_writes_cross_benchmark_matrix(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)

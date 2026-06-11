@@ -38,12 +38,12 @@ The first layer is stronger for publication because it avoids evaluating prior w
 
 | Dataset | Overall | Fidelity | Utility | Privacy | Equity | Diversity | Scope | Groundedness | Validity | Interoperability |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| KMUC | `0.8302` | `1.0000` | `0.8733` | `0.5000` | `0.8474` | `1.0000` | `0.9770` | `0.5028` | `0.9408` | `n/a` |
-| MedSynth | `0.6956` | `0.2289` | `1.0000` | `0.7249` | `n/a` | `0.7198` | `0.3827` | `0.8128` | `1.0000` | `n/a` |
-| SimSUM | `0.7021` | `0.9531` | `1.0000` | `0.1340` | `n/a` | `0.7648` | `0.2086` | `0.8540` | `1.0000` | `n/a` |
-| Synthea | `0.8050` | `0.3033` | `0.9898` | `0.7521` | `0.7254` | `0.8123` | `0.6652` | `1.0000` | `0.9974` | `1.0000` |
-| HealthGymART | `0.8550` | `0.9537` | `1.0000` | `0.5929` | `0.9987` | `0.9660` | `0.2253` | `1.0000` | `1.0000` | `0.9583` |
-| DeSynPUF | `0.8744` | `0.5969` | `0.9992` | `0.7538` | `0.9201` | `0.9279` | `0.8156` | `1.0000` | `0.9393` | `0.9165` |
+| KMUC | `0.8143` | `1.0000` | `0.7467` | `0.5000` | `0.8474` | `1.0000` | `0.9770` | `0.5028` | `0.9408` | `n/a` |
+| MedSynth | `0.6448` | `0.2289` | `n/a` | `0.7249` | `n/a` | `0.7198` | `0.3827` | `0.8128` | `1.0000` | `n/a` |
+| SimSUM | `0.6524` | `0.9531` | `n/a` | `0.1340` | `n/a` | `0.7648` | `0.2086` | `0.8540` | `1.0000` | `n/a` |
+| Synthea | `0.7818` | `0.3033` | `n/a` | `0.7521` | `0.7254` | `0.8123` | `0.6652` | `1.0000` | `0.9962` | `1.0000` |
+| HealthGymART | `0.8369` | `0.9537` | `n/a` | `0.5929` | `0.9987` | `0.9660` | `0.2253` | `1.0000` | `1.0000` | `0.9583` |
+| DeSynPUF | `0.8557` | `0.5969` | `n/a` | `0.7538` | `0.9201` | `0.9279` | `0.8156` | `1.0000` | `0.9151` | `0.9165` |
 
 ## Implementation Roadmap
 
@@ -53,6 +53,22 @@ The first layer is stronger for publication because it avoids evaluating prior w
 4. Compare numeric cells only when the same benchmark family, data split, and required labels are present. Otherwise, report the applicability state as part of the result.
 
 This keeps the paper claim defensible: KMUC can be shown against prior work's own tasks where portable, while SDE-Bench explains the common medical synthetic-data profile across heterogeneous datasets.
+
+## Publication Readiness Gate
+
+Current status: `not_ready_for_full_equivalence`.
+
+The matrix is not ready for a full paper-equivalent benchmark claim. It supports a weaker claim: SDE-Bench provides an executable axis-level profile and an original-metric crosswalk, while remaining adapters and labels define the validation work still needed.
+
+| Gate | Status | Evidence |
+|---|---|---|
+| Versioned original protocols | `pass` | Every benchmark family has formula, required inputs, and applicability rules. |
+| Executable original metric | `pass` | 3 paper-equivalent cells are available. |
+| Prior-paper baseline evidence | `pass` | Paper-reported cells are preserved separately from SDE-Bench scores. |
+| Proxy separation | `pass` | 3 SDE-derived proxy cells are excluded from paper-equivalent evidence. |
+| Adapter completeness | `fail` | 3 cells still require adapters or labels. |
+
+SDE-derived proxy cells are not counted as original-paper evidence. They can support interoperability compatibility claims, but not a full paper-equivalent benchmark claim.
 
 ## Source Notes
 

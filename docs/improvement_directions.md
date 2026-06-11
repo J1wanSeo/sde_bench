@@ -32,12 +32,12 @@ scores show the intended separation:
 
 | Dataset | Overall | Scope | Main Interpretation |
 |---|---:|---:|---|
-| KMUC | `0.8302` | `0.9770` | Broad multi-specialty synthetic patient cases, but lexical grounding and privacy distance remain weak. |
-| HealthGymART | `0.8550` | `0.2253` | Strong narrow longitudinal HIV/ART structure, not broad clinical scope. |
-| DeSynPUF | `0.8744` | `0.8156` | Broad claims diagnosis/procedure coverage, strong structured claims baseline. |
-| Synthea | `0.8050` | `0.6652` | Broad EHR structure and interoperability, but no department/scenario labels in this export. |
-| MedSynth | `0.6956` | `0.3827` | Broad diagnoses in dialogue-note pairs, but weak department/procedure/scenario scope. |
-| SimSUM | `0.7021` | `0.2086` | Strong respiratory-specific benchmark, intentionally narrow. |
+| KMUC | `0.8143` | `0.9770` | Broad multi-specialty synthetic patient cases with computed matching utility, but lexical grounding and privacy distance remain weak. |
+| HealthGymART | `0.8369` | `0.2253` | Strong narrow longitudinal HIV/ART structure, not broad clinical scope; generic task utility is n/a without prediction labels. |
+| DeSynPUF | `0.8557` | `0.8156` | Broad claims diagnosis/procedure coverage, strong structured claims baseline; generic task utility is n/a without prediction labels. |
+| Synthea | `0.7818` | `0.6652` | Broad EHR structure and interoperability, but no department/scenario labels or prediction labels in this export. |
+| MedSynth | `0.6448` | `0.3827` | Broad diagnoses in dialogue-note pairs, but weak department/procedure/scenario scope and no generic prediction labels. |
+| SimSUM | `0.6524` | `0.2086` | Strong respiratory-specific benchmark, intentionally narrow; original symptom F1 is tracked in Stage A. |
 
 ## 4. How To Improve KMUC Fairly
 

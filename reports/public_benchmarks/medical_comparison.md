@@ -39,12 +39,12 @@ synthetic medical datasets.
 
 | Dataset | Overall | Fidelity | Utility | Privacy | Equity | Diversity | Scope | Groundedness | Validity | Interoperability |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| KMUC synthetic lay cases | `0.8302` | `1.0000` | `0.8733` | `0.5000` | `0.8474` | `1.0000` | `0.9770` | `0.5028` | `0.9408` | `n/a**` |
-| MedSynth | `0.6956` | `0.2289` | `1.0000` | `0.7249` | `n/a*` | `0.7198` | `0.3827` | `0.8128` | `1.0000` | `n/a**` |
-| SimSUM sampled compact notes | `0.7021` | `0.9531` | `1.0000` | `0.1340` | `n/a*` | `0.7648` | `0.2086` | `0.8540` | `1.0000` | `n/a**` |
-| Synthea sample CSV | `0.8050` | `0.3033` | `0.9898` | `0.7521` | `0.7254` | `0.8123` | `0.6652` | `1.0000` | `0.9974` | `1.0000` |
-| Health Gym ART for HIV | `0.8550` | `0.9537` | `1.0000` | `0.5929` | `0.9987` | `0.9660` | `0.2253` | `1.0000` | `1.0000` | `0.9583` |
-| CMS DE-SynPUF inpatient claims | `0.8744` | `0.5969` | `0.9992` | `0.7538` | `0.9201` | `0.9279` | `0.8156` | `1.0000` | `0.9393` | `0.9165` |
+| KMUC synthetic lay cases | `0.8143` | `1.0000` | `0.7467` | `0.5000` | `0.8474` | `1.0000` | `0.9770` | `0.5028` | `0.9408` | `n/a**` |
+| MedSynth | `0.6448` | `0.2289` | `n/a***` | `0.7249` | `n/a*` | `0.7198` | `0.3827` | `0.8128` | `1.0000` | `n/a**` |
+| SimSUM sampled compact notes | `0.6524` | `0.9531` | `n/a***` | `0.1340` | `n/a*` | `0.7648` | `0.2086` | `0.8540` | `1.0000` | `n/a**` |
+| Synthea sample CSV | `0.7818` | `0.3033` | `n/a***` | `0.7521` | `0.7254` | `0.8123` | `0.6652` | `1.0000` | `0.9962` | `1.0000` |
+| Health Gym ART for HIV | `0.8369` | `0.9537` | `n/a***` | `0.5929` | `0.9987` | `0.9660` | `0.2253` | `1.0000` | `1.0000` | `0.9583` |
+| CMS DE-SynPUF inpatient claims | `0.8557` | `0.5969` | `n/a***` | `0.7538` | `0.9201` | `0.9279` | `0.8156` | `1.0000` | `0.9151` | `0.9165` |
 
 `*` Equity is skipped/no-sensitive-columns for MedSynth and SimSUM, so the
 axis is excluded from the overall score. It should not be interpreted as
@@ -54,14 +54,19 @@ demonstrated fairness.
 OMOP/FHIR/CSV-derived interoperability fields. It is excluded from the overall
 score rather than penalizing unstructured text datasets.
 
+`***` Clinical task utility now requires `expected_*` and `predicted_*` labels.
+Target-column presence is reported as metadata only and is not counted as task
+performance.
+
 ## Interpretation
 
 1. KMUC is currently strongest on the dimensions that match the target medical
-   service task: explicit department utility, sex-aware equity reporting,
+   service task: computed department-matching utility, sex-aware equity reporting,
    complete category coverage, and source-linked clinical validity.
 2. MedSynth is strong on source-to-note lexical grounding and ICD code validity,
-   and its own paper shows strong extrinsic generation utility. It does not
-   expose demographic variables for equity analysis in the released CSV.
+   and its own paper shows strong extrinsic generation utility. Its released
+   SDE-Bench mapping does not include prediction labels, so generic SDE utility
+   is `n/a` rather than inferred from target-column presence.
 3. SimSUM is strong on structured fidelity and note compactness/grounding, but
    the sampled benchmark flags high exact-duplicate-like structural similarity
    under SDE-Bench privacy because compact-note records retain the same tabular

@@ -39,12 +39,14 @@ When `expected_<target>` and `predicted_<target>` fields exist:
 label_accuracy = count(expected == predicted) / count(expected and predicted present)
 label_support = count(expected and predicted present)
 target_population_rate = count(target present) / count(S)
-clinical_task_utility = mean(label_accuracy, target_population_rate)
+clinical_task_utility = label_accuracy   # n/a when predicted_* labels are absent
 ```
 
-Interpretation: high score means the synthetic records remain useful for the
-declared downstream clinical task. In retrieval or matching studies, papers
-should also report native task metrics such as hit@k, MRR, AUROC, or F1.
+Interpretation: utility is the downstream task accuracy. `target_population_rate`
+(mere presence of a target column) is reported as a metric but does NOT count
+toward the score; without `predicted_*` labels the axis is reported as `n/a`,
+not a high score. In retrieval or matching studies, papers should also report
+native task metrics such as hit@k, MRR, AUROC, or F1.
 
 ## 3. Privacy
 
@@ -159,12 +161,13 @@ acuity_validity = count(acuity in allowed vocabulary) / count(rows with acuity)
 laterality_validity = count(laterality in allowed vocabulary) / count(rows with laterality)
 dept_consistency = count(dept or expected_dept matches source dept) / count(source-linked rows with source dept)
 diagnosis_source_overlap = mean token overlap between synthetic diagnosis and source diagnosis
-clinical_validity = mean(all available metrics above)
+clinical_validity = mean(available metrics above)   # absent fields = n/a, NOT 1.0
 ```
 
 Interpretation: high score means basic medical fields are structurally coherent
-and source-consistent. Specialty-specific clinical rule packs should be added for
-stronger claims.
+and source-consistent. Checks for fields a dataset does not expose return `n/a`
+(not 1.0), so sparse datasets are not rewarded for having nothing to violate.
+Specialty-specific clinical rule packs should be added for stronger claims.
 
 ## 9. Medical Interoperability
 

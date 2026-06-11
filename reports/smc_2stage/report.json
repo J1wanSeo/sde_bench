@@ -1,8 +1,8 @@
 {
   "schema_version": "0.1.0",
   "records": {
-    "real": 150,
-    "synthetic": 750
+    "real": 1170,
+    "synthetic": 1170
   },
   "config": "full_eval",
   "axes": {
@@ -16,11 +16,10 @@
       }
     },
     "clinical_task_utility": {
-      "score": 0.7466666666666667,
+      "score": null,
       "metrics": {
-        "label_accuracy": 0.7466666666666667,
-        "label_support": 150,
-        "target_population_rate": 1.0
+        "label_accuracy": null,
+        "label_support": 0
       }
     },
     "privacy": {
@@ -28,18 +27,17 @@
       "metrics": {
         "exact_duplicate_rate": 0.0,
         "median_distance_to_reference": 0.0,
-        "records_compared": 750,
-        "distance_synthetic_records": 750,
-        "distance_reference_records": 150,
-        "distance_sampled": false
+        "records_compared": 1170,
+        "distance_synthetic_records": 1000,
+        "distance_reference_records": 1000,
+        "distance_sampled": true
       }
     },
     "equity": {
-      "score": 0.8474370304904993,
+      "score": 1.0,
       "metrics": {
         "sensitive_columns": "sex",
-        "sensitive_distribution_similarity": 1.0,
-        "group_target_parity": 0.6948740609809987
+        "sensitive_distribution_similarity": 1.0
       }
     },
     "medical_diversity": {
@@ -52,39 +50,39 @@
       }
     },
     "clinical_scope_breadth": {
-      "score": 0.9770433208236664,
+      "score": 0.9844475874781514,
       "metrics": {
         "department_scope": 1.0,
-        "department_unique": 15,
-        "diagnosis_scope": 0.979825353419532,
-        "diagnosis_unique": 20,
+        "department_unique": 23,
+        "diagnosis_scope": 0.9947347273688915,
+        "diagnosis_unique": 21,
         "procedure_scope": 1.0,
-        "procedure_unique": 73,
-        "demographic_scope": 0.9218706233043445,
+        "procedure_unique": 502,
+        "demographic_scope": 0.911950797500017,
         "age_group_unique": 5,
         "sex_or_gender_unique": 2,
-        "scenario_scope": 0.9605639482181221,
-        "scenario_unique": 8,
+        "scenario_scope": 1.0,
+        "scenario_unique": 7,
         "task_scope": 1.0,
-        "task_signal_unique": 5
+        "task_signal_unique": 4
       }
     },
     "clinical_groundedness": {
-      "score": 0.5027767752858937,
+      "score": 0.5,
       "metrics": {
         "source_attribution_rate": 1.0,
-        "evidence_support_score": 0.005553550571787311,
-        "evidence_support_n": 750
+        "evidence_support_score": 0.0,
+        "evidence_support_n": 1170
       }
     },
     "clinical_validity": {
-      "score": 0.9408333333333333,
+      "score": 0.9395299145299145,
       "metrics": {
         "age_validity": 1.0,
         "non_empty_diagnosis_rate": 1.0,
         "icd10_format_validity": 1.0,
         "icd9_format_validity": null,
-        "procedure_completeness": 0.5266666666666666,
+        "procedure_completeness": 0.5162393162393163,
         "acuity_validity": 1.0,
         "laterality_validity": 1.0,
         "dept_consistency": 1.0,
@@ -98,9 +96,10 @@
       }
     }
   },
-  "overall_score": 0.8143446408250075,
+  "overall_score": 0.8462825002868666,
   "skipped": [
+    "clinical_task_utility.target_population_rate: provide --target",
     "medical_interoperability: provide OMOP/FHIR/CSV-derived interoperability fields"
   ],
-  "name": "synthetic_lay"
+  "name": "SMC-2stage"
 }

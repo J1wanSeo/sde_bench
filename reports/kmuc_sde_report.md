@@ -1,12 +1,12 @@
 # SDE-Bench Report
 
 - dataset: `synthetic_lay`
-- overall_score: `0.8302`
+- overall_score: `0.8143`
 
 | Axis | Score | Key metrics |
 |---|---:|---|
 | medical_fidelity | 1.0000 | column_similarity=1.0000, pairwise_similarity=1.0000, columns_compared=8, pairs_compared=21 |
-| clinical_task_utility | 0.8733 | label_accuracy=0.7467, label_support=150, target_population_rate=1.0000 |
+| clinical_task_utility | 0.7467 | label_accuracy=0.7467, label_support=150, target_population_rate=1.0000 |
 | privacy | 0.5000 | exact_duplicate_rate=0.0000, median_distance_to_reference=0.0000, records_compared=750, distance_synthetic_records=750, distance_reference_records=150, distance_sampled=False |
 | equity | 0.8474 | sensitive_columns=sex, sensitive_distribution_similarity=1.0000, group_target_parity=0.6949 |
 | medical_diversity | 1.0000 | category_coverage=1.0000, entropy_ratio=1.0000, unique_record_ratio=1.0000, categorical_columns=7 |

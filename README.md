@@ -161,6 +161,13 @@ family, reporting computed values, paper-reported values, adapter requirements,
 or non-applicability reasons. Stage B then compares all evaluated datasets under
 the common SDE-Bench medical axes.
 
+The matrix also emits a publication-readiness gate. `computed` and
+`paper_reported` cells count as paper-equivalent evidence; `sde_proxy` cells do
+not. A full "same level as prior self-evaluation benchmarks" claim should be
+made only after adapter and label gaps are cleared. Until then, the supported
+claim is an executable original-metric crosswalk plus a common medical
+axis-level profile.
+
 Public synthetic dataset survey:
 
 ```bash
@@ -195,6 +202,20 @@ Each report contains:
 
 The overall score is intentionally a convenience summary, not the scientific
 claim. Papers should report the axis table and the task-specific metrics.
+
+## Publication Claim Readiness
+
+See `docs/publication_claim_readiness.md` for the conservative claim ladder used
+for JMIR-style manuscripts. The short version:
+
+- **Ready**: prior-paper protocols are versioned, original metrics are computed
+  or faithfully paper-reported, proxies are separated, and no adapter/label gaps
+  remain for the intended comparison.
+- **Current state**: SDE-Bench supports an executable benchmark profile and a
+  transparent original-metric crosswalk, but not yet a full paper-equivalent
+  claim for every prior dataset family.
+- **Unsafe**: using `overall_score` alone or treating `sde_proxy` as an
+  original-paper metric.
 
 ## SynthEval Completeness Checklist
 
