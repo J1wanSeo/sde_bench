@@ -93,6 +93,8 @@ SOURCE_NOTES = [
     "SimSUM original benchmark: https://arxiv.org/abs/2409.08936",
     "Synthea generator/sample page: https://synthetichealth.github.io/synthea/",
     "Synthea JAMIA paper: https://academic.oup.com/jamia/article/25/3/230/4098271",
+    "Health Gym ART for HIV dataset: https://doi.org/10.6084/m9.figshare.22827878.v1",
+    "Health Gym Scientific Data paper: https://www.nature.com/articles/s41597-022-01784-7",
 ]
 
 

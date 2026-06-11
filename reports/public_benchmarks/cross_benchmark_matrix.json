@@ -154,12 +154,25 @@
       "clinical_groundedness": 1.0,
       "clinical_validity": 0.9978059483178937,
       "medical_interoperability": 1.0
+    },
+    "HealthGymART": {
+      "overall": 0.8991087990383198,
+      "medical_fidelity": 0.7517063492063492,
+      "clinical_task_utility": 1.0,
+      "privacy": 0.6103530753341886,
+      "equity": 0.95,
+      "medical_diversity": 0.9224776344326872,
+      "clinical_groundedness": 1.0,
+      "clinical_validity": 1.0,
+      "medical_interoperability": 0.9583333333333334
     }
   },
   "source_notes": [
     "MedSynth original benchmark: https://arxiv.org/abs/2508.01401",
     "SimSUM original benchmark: https://arxiv.org/abs/2409.08936",
     "Synthea generator/sample page: https://synthetichealth.github.io/synthea/",
-    "Synthea JAMIA paper: https://academic.oup.com/jamia/article/25/3/230/4098271"
+    "Synthea JAMIA paper: https://academic.oup.com/jamia/article/25/3/230/4098271",
+    "Health Gym ART for HIV dataset: https://doi.org/10.6084/m9.figshare.22827878.v1",
+    "Health Gym Scientific Data paper: https://www.nature.com/articles/s41597-022-01784-7"
   ]
 }

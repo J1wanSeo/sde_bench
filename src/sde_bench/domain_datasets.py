@@ -43,6 +43,15 @@ EVALUATED_DATASETS: list[Report] = [
         "current_report": "reports/public_benchmarks/synthea/report.md",
         "sde_bench_plan": "structured EHR interoperability benchmark",
     },
+    {
+        "dataset_id": "health_gym_art_hiv",
+        "domain": "medical",
+        "name": "Health Gym ART for HIV",
+        "status": "evaluated",
+        "source_url": "https://doi.org/10.6084/m9.figshare.22827878.v1",
+        "current_report": "reports/public_benchmarks/health_gym/report.md",
+        "sde_bench_plan": "longitudinal synthetic ART monthly-record benchmark",
+    },
 ]
 
 
@@ -50,22 +59,22 @@ CANDIDATE_DATASETS: list[Report] = [
     {
         "dataset_id": "health_gym_icu",
         "domain": "medical",
-        "name": "Health Gym ICU/HIV synthetic health datasets",
-        "status": "next_batch",
-        "priority": "P0",
+        "name": "Health Gym ICU synthetic health datasets",
+        "status": "candidate",
+        "priority": "P1",
         "source_url": "https://arxiv.org/abs/2203.06369",
         "public_artifact": "https://github.com/NicKuo-ResearchStuff/Health_Gym_AI",
         "native_format": "longitudinal tabular time series",
         "original_metric": "offline RL task utility, distribution/correlation similarity, disclosure risk",
         "sde_bench_plan": "map patient trajectories to per-visit records; evaluate fidelity, privacy, diversity, validity, and structured temporal traceability",
         "adapter_work": "flatten ICU/HIV trajectories into JSONL with patient_id, time, vitals/labs/actions/outcomes",
-        "why": "closest medical addition after Synthea because it is public, synthetic, longitudinal, and benchmark-oriented.",
+        "why": "important medical longitudinal follow-up after the evaluated ART subset, but PhysioNet access flow is separate from the Figshare ART file.",
     },
     {
         "dataset_id": "de_synpuf_claims",
         "domain": "medical",
         "name": "CMS DE-SynPUF claims",
-        "status": "candidate",
+        "status": "next_batch",
         "priority": "P1",
         "source_url": "https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files",
         "native_format": "claims tables",
@@ -175,7 +184,7 @@ def build_domain_survey() -> Report:
     counts = Counter(row["domain"] for row in all_rows)
     next_batch = sorted(
         [row for row in CANDIDATE_DATASETS if row["status"] == "next_batch"],
-        key=lambda row: (row["priority"], _domain_rank(row["domain"]), row["dataset_id"]),
+        key=lambda row: (_domain_rank(row["domain"]), row["priority"], row["dataset_id"]),
     )
     return {
         "schema_version": "0.1.0",

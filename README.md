@@ -85,6 +85,17 @@ python3 -m sde_bench kmuc-export \
   --format jsonl
 ```
 
+The Health Gym ART adapter maps synthetic monthly HIV treatment records into
+longitudinal JSONL records:
+
+```bash
+python3 -m sde_bench health-gym-export \
+  --input data/public_raw/health_gym/HealthGymV2_CbdrhDatathon_ART4HIV.csv \
+  --out-dir reports/public_benchmarks/health_gym \
+  --format jsonl \
+  --limit 600
+```
+
 Multiple synthetic datasets:
 
 ```bash
@@ -105,6 +116,7 @@ python3 -m sde_bench cross-benchmark \
   --sde-report MedSynth=reports/public_benchmarks/medsynth/report.json \
   --sde-report SimSUM=reports/public_benchmarks/simsum/report.json \
   --sde-report Synthea=reports/public_benchmarks/synthea/report.json \
+  --sde-report HealthGymART=reports/public_benchmarks/health_gym/report.json \
   --json-out reports/public_benchmarks/cross_benchmark_matrix.json \
   --md-out reports/public_benchmarks/cross_benchmark_matrix.md
 ```

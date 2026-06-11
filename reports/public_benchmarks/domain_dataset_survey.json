@@ -8,7 +8,7 @@
   ],
   "domain_counts": {
     "finance": 3,
-    "medical": 7,
+    "medical": 8,
     "science": 3
   },
   "evaluated_datasets": [
@@ -47,28 +47,37 @@
       "source_url": "https://synthea.mitre.org/downloads",
       "current_report": "reports/public_benchmarks/synthea/report.md",
       "sde_bench_plan": "structured EHR interoperability benchmark"
+    },
+    {
+      "dataset_id": "health_gym_art_hiv",
+      "domain": "medical",
+      "name": "Health Gym ART for HIV",
+      "status": "evaluated",
+      "source_url": "https://doi.org/10.6084/m9.figshare.22827878.v1",
+      "current_report": "reports/public_benchmarks/health_gym/report.md",
+      "sde_bench_plan": "longitudinal synthetic ART monthly-record benchmark"
     }
   ],
   "candidate_datasets": [
     {
       "dataset_id": "health_gym_icu",
       "domain": "medical",
-      "name": "Health Gym ICU/HIV synthetic health datasets",
-      "status": "next_batch",
-      "priority": "P0",
+      "name": "Health Gym ICU synthetic health datasets",
+      "status": "candidate",
+      "priority": "P1",
       "source_url": "https://arxiv.org/abs/2203.06369",
       "public_artifact": "https://github.com/NicKuo-ResearchStuff/Health_Gym_AI",
       "native_format": "longitudinal tabular time series",
       "original_metric": "offline RL task utility, distribution/correlation similarity, disclosure risk",
       "sde_bench_plan": "map patient trajectories to per-visit records; evaluate fidelity, privacy, diversity, validity, and structured temporal traceability",
       "adapter_work": "flatten ICU/HIV trajectories into JSONL with patient_id, time, vitals/labs/actions/outcomes",
-      "why": "closest medical addition after Synthea because it is public, synthetic, longitudinal, and benchmark-oriented."
+      "why": "important medical longitudinal follow-up after the evaluated ART subset, but PhysioNet access flow is separate from the Figshare ART file."
     },
     {
       "dataset_id": "de_synpuf_claims",
       "domain": "medical",
       "name": "CMS DE-SynPUF claims",
-      "status": "candidate",
+      "status": "next_batch",
       "priority": "P1",
       "source_url": "https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files",
       "native_format": "claims tables",
@@ -173,18 +182,17 @@
   ],
   "next_batch": [
     {
-      "dataset_id": "health_gym_icu",
+      "dataset_id": "de_synpuf_claims",
       "domain": "medical",
-      "name": "Health Gym ICU/HIV synthetic health datasets",
+      "name": "CMS DE-SynPUF claims",
       "status": "next_batch",
-      "priority": "P0",
-      "source_url": "https://arxiv.org/abs/2203.06369",
-      "public_artifact": "https://github.com/NicKuo-ResearchStuff/Health_Gym_AI",
-      "native_format": "longitudinal tabular time series",
-      "original_metric": "offline RL task utility, distribution/correlation similarity, disclosure risk",
-      "sde_bench_plan": "map patient trajectories to per-visit records; evaluate fidelity, privacy, diversity, validity, and structured temporal traceability",
-      "adapter_work": "flatten ICU/HIV trajectories into JSONL with patient_id, time, vitals/labs/actions/outcomes",
-      "why": "closest medical addition after Synthea because it is public, synthetic, longitudinal, and benchmark-oriented."
+      "priority": "P1",
+      "source_url": "https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files",
+      "native_format": "claims tables",
+      "original_metric": "claims analytic usefulness and privacy-preserving public release",
+      "sde_bench_plan": "map beneficiary, diagnosis, procedure, and claim tables to encounter records",
+      "adapter_work": "claims parser plus ICD/procedure field normalization",
+      "why": "useful for claims-style medical synthetic data, but larger and less LLM/RAG-like than KMUC."
     },
     {
       "dataset_id": "fifar_fraud_l2d",

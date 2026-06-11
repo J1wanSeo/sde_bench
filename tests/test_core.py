@@ -7,6 +7,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from sde_bench import benchmark, evaluate, load_config, load_records
+from sde_bench.adapters.health_gym import export_health_gym_art_records
 from sde_bench.adapters.kmuc import export_kmuc_records
 from sde_bench.adapters.medsynth import export_medsynth_records
 from sde_bench.adapters.synthea import export_synthea_records
@@ -436,6 +437,25 @@ class SdeBenchCoreTests(unittest.TestCase):
         self.assertEqual(exported["synthetic"][0]["standard_vocabularies"], "SNOMED-CT")
         self.assertEqual(exported["synthetic"][0]["encounter_id"], "E2")
 
+    def test_health_gym_adapter_exports_longitudinal_art_records_by_patient(self) -> None:
+        rows = [
+            {"VL": "29.9", "CD4": "793.4", "Rel CD4": "30.8", "Gender": "1", "Ethnic": "3", "Drug (M)": "1", "PatientID": "0", "Timestep": "0"},
+            {"VL": "29.2", "CD4": "467.4", "Rel CD4": "30.3", "Gender": "1", "Ethnic": "3", "Drug (M)": "0", "PatientID": "0", "Timestep": "1"},
+            {"VL": "31.1", "CD4": "500.0", "Rel CD4": "28.1", "Gender": "0", "Ethnic": "2", "Drug (M)": "1", "PatientID": "1", "Timestep": "0"},
+            {"VL": "30.5", "CD4": "510.0", "Rel CD4": "28.5", "Gender": "0", "Ethnic": "2", "Drug (M)": "0", "PatientID": "1", "Timestep": "1"},
+        ]
+
+        exported = export_health_gym_art_records(rows, split_fraction=0.5)
+
+        self.assertEqual([row["patient_id"] for row in exported["reference"]], ["0", "0"])
+        self.assertEqual([row["patient_id"] for row in exported["synthetic"]], ["1", "1"])
+        self.assertEqual(exported["synthetic"][0]["case_id"], "HEALTHGYM-ART-1-T0")
+        self.assertEqual(exported["synthetic"][0]["source_id"], exported["source"][0]["source_id"])
+        self.assertEqual(exported["synthetic"][0]["diagnosis"], "HIV antiretroviral therapy")
+        self.assertEqual(exported["synthetic"][0]["condition_start"], "2023-01-01")
+        self.assertIn("measurement", exported["synthetic"][0]["omop_domains"])
+        self.assertEqual(exported["synthetic"][0]["standard_vocabularies"], "LOINC|RxNorm|SNOMED-CT")
+
 
 class SdeBenchCliTests(unittest.TestCase):
     def test_domain_survey_prioritizes_medical_and_cross_domain_candidates(self) -> None:
@@ -446,7 +466,7 @@ class SdeBenchCliTests(unittest.TestCase):
         self.assertGreaterEqual(survey["domain_counts"]["medical"], 5)
         self.assertIn("finance", survey["domain_counts"])
         self.assertIn("science", survey["domain_counts"])
-        self.assertEqual(survey["next_batch"][0]["dataset_id"], "health_gym_icu")
+        self.assertEqual(survey["next_batch"][0]["dataset_id"], "de_synpuf_claims")
         self.assertIn("Health Gym", rendered)
         self.assertIn("FiFAR", rendered)
         self.assertIn("SynTReN", rendered)
@@ -809,6 +829,43 @@ class SdeBenchCliTests(unittest.TestCase):
             self.assertEqual(proc.returncode, 0, proc.stderr)
             exported = load_records(out_dir / "synthetic.jsonl")
             self.assertEqual(exported[0]["diagnosis"], "Diabetes mellitus")
+            self.assertTrue((out_dir / "reference.jsonl").exists())
+            self.assertTrue((out_dir / "source.jsonl").exists())
+
+    def test_cli_exports_health_gym_files(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            input_path = root / "health_gym.csv"
+            out_dir = root / "out"
+            write_csv(
+                input_path,
+                [
+                    {"VL": "29.9", "CD4": "793.4", "Rel CD4": "30.8", "Gender": "1", "Ethnic": "3", "Drug (M)": "1", "PatientID": "0", "Timestep": "0"},
+                    {"VL": "29.2", "CD4": "467.4", "Rel CD4": "30.3", "Gender": "1", "Ethnic": "3", "Drug (M)": "0", "PatientID": "0", "Timestep": "1"},
+                    {"VL": "31.1", "CD4": "500.0", "Rel CD4": "28.1", "Gender": "0", "Ethnic": "2", "Drug (M)": "1", "PatientID": "1", "Timestep": "0"},
+                    {"VL": "30.5", "CD4": "510.0", "Rel CD4": "28.5", "Gender": "0", "Ethnic": "2", "Drug (M)": "0", "PatientID": "1", "Timestep": "1"},
+                ],
+            )
+
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "sde_bench",
+                    "health-gym-export",
+                    "--input",
+                    str(input_path),
+                    "--out-dir",
+                    str(out_dir),
+                ],
+                check=False,
+                text=True,
+                capture_output=True,
+            )
+
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            exported = load_records(out_dir / "synthetic.jsonl")
+            self.assertEqual(exported[0]["patient_id"], "1")
             self.assertTrue((out_dir / "reference.jsonl").exists())
             self.assertTrue((out_dir / "source.jsonl").exists())
 

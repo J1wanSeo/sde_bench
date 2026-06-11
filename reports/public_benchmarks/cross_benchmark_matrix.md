@@ -50,6 +50,7 @@ The second layer is stronger for publication because it avoids evaluating prior 
 | MedSynth | `0.7446` | `0.2289` | `1.0000` | `0.7061` | `n/a` | `0.7198` | `0.8128` | `1.0000` | `n/a` |
 | SimSUM | `0.7843` | `0.9531` | `1.0000` | `0.1340` | `n/a` | `0.7648` | `0.8540` | `1.0000` | `n/a` |
 | Synthea | `0.8226` | `0.3033` | `0.9898` | `0.7521` | `0.7254` | `0.8123` | `1.0000` | `0.9978` | `1.0000` |
+| HealthGymART | `0.8991` | `0.7517` | `1.0000` | `0.6104` | `0.9500` | `0.9225` | `1.0000` | `1.0000` | `0.9583` |
 
 ## Implementation Roadmap
 
@@ -66,3 +67,5 @@ This keeps the paper claim defensible: KMUC can be shown against prior work's ow
 - SimSUM original benchmark: https://arxiv.org/abs/2409.08936
 - Synthea generator/sample page: https://synthetichealth.github.io/synthea/
 - Synthea JAMIA paper: https://academic.oup.com/jamia/article/25/3/230/4098271
+- Health Gym ART for HIV dataset: https://doi.org/10.6084/m9.figshare.22827878.v1
+- Health Gym Scientific Data paper: https://www.nature.com/articles/s41597-022-01784-7

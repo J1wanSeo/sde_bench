@@ -1,0 +1,82 @@
+{
+  "schema_version": "0.1.0",
+  "records": {
+    "real": 300,
+    "synthetic": 300
+  },
+  "config": "full_eval",
+  "axes": {
+    "medical_fidelity": {
+      "score": 0.7517063492063492,
+      "metrics": {
+        "column_similarity": 0.8080555555555556,
+        "pairwise_similarity": 0.6953571428571428,
+        "columns_compared": 24,
+        "pairs_compared": 28
+      }
+    },
+    "clinical_task_utility": {
+      "score": 1.0,
+      "metrics": {
+        "target_population_rate": 1.0
+      }
+    },
+    "privacy": {
+      "score": 0.6103530753341886,
+      "metrics": {
+        "exact_duplicate_rate": 0.0,
+        "median_distance_to_reference": 0.2207061506683772,
+        "records_compared": 300
+      }
+    },
+    "equity": {
+      "score": 0.95,
+      "metrics": {
+        "sensitive_columns": "sex,ethnicity",
+        "sensitive_distribution_similarity": 0.8999999999999999,
+        "group_target_parity": 1.0
+      }
+    },
+    "medical_diversity": {
+      "score": 0.9224776344326872,
+      "metrics": {
+        "category_coverage": 0.85,
+        "entropy_ratio": 0.9174329032980616,
+        "unique_record_ratio": 1.0,
+        "categorical_columns": 20
+      }
+    },
+    "clinical_groundedness": {
+      "score": 1.0,
+      "metrics": {
+        "source_attribution_rate": 1.0,
+        "evidence_support_score": 1.0,
+        "evidence_support_n": 300
+      }
+    },
+    "clinical_validity": {
+      "score": 1.0,
+      "metrics": {
+        "age_validity": 1.0,
+        "non_empty_diagnosis_rate": 1.0,
+        "icd10_format_validity": 1.0,
+        "procedure_completeness": 1.0,
+        "acuity_validity": 1.0,
+        "laterality_validity": 1.0,
+        "diagnosis_source_overlap": 1.0
+      }
+    },
+    "medical_interoperability": {
+      "score": 0.9583333333333334,
+      "metrics": {
+        "omop_domain_coverage": 0.8333333333333334,
+        "standard_vocabulary_rate": 1.0,
+        "temporal_traceability": 1.0,
+        "relational_integrity": 1.0
+      }
+    }
+  },
+  "overall_score": 0.8991087990383198,
+  "skipped": [],
+  "name": "synthetic"
+}

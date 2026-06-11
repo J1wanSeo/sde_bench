@@ -1,0 +1,31 @@
+{
+  "dataset_id": "health_gym_art_hiv",
+  "dataset_name": "The Health Gym v2.0 Synthetic Antiretroviral Therapy (ART) for HIV Dataset",
+  "domain": "medical",
+  "source": {
+    "article_api": "https://api.figshare.com/v2/articles/22827878",
+    "public_html": "https://figshare.com/articles/dataset/The_Health_Gym_v2_0_Synthetic_Antiretroviral_Therapy_ART_for_HIV_Dataset/22827878",
+    "doi": "10.6084/m9.figshare.22827878.v1",
+    "file_id": 40584980,
+    "file_name": "HealthGymV2_CbdrhDatathon_ART4HIV.csv",
+    "download_url": "https://ndownloader.figshare.com/files/40584980",
+    "license": "CC BY 4.0"
+  },
+  "source_shape": {
+    "reported_records": 534960,
+    "reported_patients": 8916,
+    "reported_months_per_patient": 60,
+    "columns": 15
+  },
+  "sde_bench_run": {
+    "evaluation_scope": "sampled first 600 source rows because full privacy nearest-reference comparison is quadratic in current SDE-Bench",
+    "export_limit": 600,
+    "reference_records": 300,
+    "synthetic_records": 300,
+    "source_records": 300,
+    "target": "diagnosis_group",
+    "sensitive_columns": ["sex", "ethnicity"],
+    "export_command": "PYTHONPATH=src python3 -m sde_bench health-gym-export --input data/public_raw/health_gym/HealthGymV2_CbdrhDatathon_ART4HIV.csv --out-dir reports/public_benchmarks/health_gym --format jsonl --limit 600",
+    "evaluate_command": "PYTHONPATH=src python3 -m sde_bench evaluate --real reports/public_benchmarks/health_gym/reference.jsonl --synthetic reports/public_benchmarks/health_gym/synthetic.jsonl --source reports/public_benchmarks/health_gym/source.jsonl --target diagnosis_group --sensitive sex,ethnicity --json-out reports/public_benchmarks/health_gym/report.json --md-out reports/public_benchmarks/health_gym/report.md"
+  }
+}
