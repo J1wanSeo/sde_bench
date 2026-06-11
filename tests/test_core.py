@@ -890,6 +890,45 @@ class SdeBenchCliTests(unittest.TestCase):
         self.assertIn("not ready for a full paper-equivalent benchmark claim", rendered)
         self.assertIn("SDE-derived proxy cells are not counted as original-paper evidence", rendered)
 
+    def test_cross_benchmark_readiness_lists_blocking_cells_with_next_actions(self) -> None:
+        reports = {
+            "KMUC": {
+                "overall_score": 0.8,
+                "axes": {
+                    "medical_interoperability": {"score": None},
+                },
+            },
+            "Synthea": {
+                "overall_score": 0.82,
+                "axes": {
+                    "medical_interoperability": {"score": 1.0},
+                },
+            },
+        }
+
+        report = build_cross_benchmark_report(reports)
+        blockers = report["publication_readiness"]["blocking_cells"]
+        rendered = markdown_cross_benchmark(report)
+
+        kmuc_medsynth = next(
+            cell
+            for cell in blockers
+            if cell["benchmark_family"] == "medsynth_dial_note" and cell["dataset"] == "KMUC"
+        )
+        synthea_proxy = next(
+            cell
+            for cell in blockers
+            if cell["benchmark_family"] == "synthea_structured_ehr" and cell["dataset"] == "Synthea"
+        )
+        self.assertEqual(kmuc_medsynth["status"], "requires_adapter")
+        self.assertEqual(kmuc_medsynth["blocks"], "full_equivalence")
+        self.assertIn("dialogue-note", kmuc_medsynth["next_action"])
+        self.assertEqual(synthea_proxy["status"], "sde_proxy")
+        self.assertEqual(synthea_proxy["blocks"], "paper_equivalent_evidence")
+        self.assertIn("Blocking Cells", rendered)
+        self.assertIn("KMUC", rendered)
+        self.assertIn("medsynth_dial_note", rendered)
+
     def test_cli_writes_cross_benchmark_matrix(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -251,6 +251,21 @@ def markdown_cross_benchmark(report: Report) -> str:
             "They can support interoperability compatibility claims, but not a full paper-equivalent benchmark claim.",
         ]
     )
+    if readiness.get("blocking_cells"):
+        lines.extend(
+            [
+                "",
+                "### Blocking Cells",
+                "",
+                "| Benchmark Family | Dataset | Status | Blocks | Next Action |",
+                "|---|---|---|---|---|",
+            ]
+        )
+        for cell in readiness["blocking_cells"]:
+            lines.append(
+                f"| `{cell['benchmark_family']}` | {cell['dataset']} | `{cell['status']}` | "
+                f"{cell['blocks']} | {cell['next_action']} |"
+            )
 
     lines.extend(["", "## Source Notes", ""])
     lines.extend(f"- {note}" for note in report.get("source_notes", []))
@@ -286,14 +301,15 @@ def _publication_readiness(stage_a_original: dict[str, dict[str, Report]]) -> Re
     paper_equivalent_statuses = ["computed", "paper_reported"]
     proxy_statuses = ["sde_proxy"]
     blocking_statuses = ["requires_adapter", "requires_labels"]
+    blocking_cells = []
     evidence_counts = {
         "paper_equivalent_cells": 0,
         "proxy_cells": 0,
         "blocking_cells": 0,
     }
     status_counts: dict[str, int] = {}
-    for cells in stage_a_original.values():
-        for cell in cells.values():
+    for family, cells in stage_a_original.items():
+        for dataset, cell in cells.items():
             status = str(cell.get("status", "unknown"))
             value = str(cell.get("value", ""))
             has_evidence_value = value not in {"", "n/a"} and not value.startswith("n/a: ")
@@ -303,9 +319,11 @@ def _publication_readiness(stage_a_original: dict[str, dict[str, Report]]) -> Re
             elif status in proxy_statuses and has_evidence_value:
                 evidence_counts["proxy_cells"] += 1
                 status_counts[status] = status_counts.get(status, 0) + 1
+                blocking_cells.append(_blocking_cell(family, dataset, cell, blocks="paper_equivalent_evidence"))
             elif status in blocking_statuses:
                 evidence_counts["blocking_cells"] += 1
                 status_counts[status] = status_counts.get(status, 0) + 1
+                blocking_cells.append(_blocking_cell(family, dataset, cell, blocks="full_equivalence"))
 
     protocol_fields = ["core_metric", "metric_formula", "required_inputs", "applicability_rule"]
     protocols_versioned = all(
@@ -379,8 +397,37 @@ def _publication_readiness(stage_a_original: dict[str, dict[str, Report]]) -> Re
         "blocking_statuses": blocking_statuses,
         "status_counts": status_counts,
         "evidence_counts": evidence_counts,
+        "blocking_cells": blocking_cells,
         "gates": gates,
     }
+
+
+def _blocking_cell(family: str, dataset: str, cell: Report, *, blocks: str) -> Report:
+    status = str(cell.get("status", "unknown"))
+    return {
+        "benchmark_family": family,
+        "dataset": dataset,
+        "status": status,
+        "blocks": blocks,
+        "reason": str(cell.get("why") or cell.get("value") or ""),
+        "next_action": _next_action(family, dataset, status),
+    }
+
+
+def _next_action(family: str, dataset: str, status: str) -> str:
+    if status == "sde_proxy":
+        return "Replace the SDE proxy with the original paper's metric or cite a faithful paper-reported baseline."
+    if family == "medsynth_dial_note" and status == "requires_adapter":
+        return "Build a dialogue-note adapter and run the Dial-2-Note/Note-2-Dial task or an explicitly labeled non-equivalent text-metric screen."
+    if family == "simsum_symptom_ie" and status == "requires_labels":
+        return "Add dyspnea/cough/pain/nasal/fever labels or clinician-reviewed label projection before computing symptom F1."
+    if family == "simsum_symptom_ie" and status == "requires_adapter":
+        return "Derive respiratory symptom labels from structured conditions/observations and validate the projection before computing F1."
+    if status == "requires_adapter":
+        return "Implement the dataset-to-original-benchmark adapter and rerun the original metric."
+    if status == "requires_labels":
+        return "Add the missing labels required by the original benchmark protocol."
+    return "Review applicability and update the benchmark-family cell status."
 
 
 def _apply_original_reports(stage_a_original: dict[str, dict[str, Report]], original_reports: dict[str, Report]) -> None:

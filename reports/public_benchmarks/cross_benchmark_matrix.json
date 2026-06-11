@@ -249,6 +249,56 @@
       "proxy_cells": 3,
       "blocking_cells": 3
     },
+    "blocking_cells": [
+      {
+        "benchmark_family": "medsynth_dial_note",
+        "dataset": "KMUC",
+        "status": "requires_adapter",
+        "blocks": "full_equivalence",
+        "reason": "KMUC has source EMR and lay text, not true doctor-patient dialogue paired with SOAP notes.",
+        "next_action": "Build a dialogue-note adapter and run the Dial-2-Note/Note-2-Dial task or an explicitly labeled non-equivalent text-metric screen."
+      },
+      {
+        "benchmark_family": "simsum_symptom_ie",
+        "dataset": "KMUC",
+        "status": "requires_labels",
+        "blocks": "full_equivalence",
+        "reason": "KMUC is multi-specialty and does not expose dyspnea/cough/pain/nasal/fever labels or spans.",
+        "next_action": "Add dyspnea/cough/pain/nasal/fever labels or clinician-reviewed label projection before computing symptom F1."
+      },
+      {
+        "benchmark_family": "simsum_symptom_ie",
+        "dataset": "Synthea",
+        "status": "requires_adapter",
+        "blocks": "full_equivalence",
+        "reason": "derive respiratory symptoms from Synthea conditions/observations",
+        "next_action": "Derive respiratory symptom labels from structured conditions/observations and validate the projection before computing F1."
+      },
+      {
+        "benchmark_family": "synthea_structured_ehr",
+        "dataset": "Synthea",
+        "status": "sde_proxy",
+        "blocks": "paper_equivalent_evidence",
+        "reason": "`medical_interoperability=1.0000`",
+        "next_action": "Replace the SDE proxy with the original paper's metric or cite a faithful paper-reported baseline."
+      },
+      {
+        "benchmark_family": "synthea_structured_ehr",
+        "dataset": "HealthGymART",
+        "status": "sde_proxy",
+        "blocks": "paper_equivalent_evidence",
+        "reason": "`medical_interoperability=0.9583`",
+        "next_action": "Replace the SDE proxy with the original paper's metric or cite a faithful paper-reported baseline."
+      },
+      {
+        "benchmark_family": "synthea_structured_ehr",
+        "dataset": "DeSynPUF",
+        "status": "sde_proxy",
+        "blocks": "paper_equivalent_evidence",
+        "reason": "`medical_interoperability=0.9165`",
+        "next_action": "Replace the SDE proxy with the original paper's metric or cite a faithful paper-reported baseline."
+      }
+    ],
     "gates": [
       {
         "name": "Versioned original protocols",

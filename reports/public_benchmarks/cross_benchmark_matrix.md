@@ -70,6 +70,17 @@ The matrix is not ready for a full paper-equivalent benchmark claim. It supports
 
 SDE-derived proxy cells are not counted as original-paper evidence. They can support interoperability compatibility claims, but not a full paper-equivalent benchmark claim.
 
+### Blocking Cells
+
+| Benchmark Family | Dataset | Status | Blocks | Next Action |
+|---|---|---|---|---|
+| `medsynth_dial_note` | KMUC | `requires_adapter` | full_equivalence | Build a dialogue-note adapter and run the Dial-2-Note/Note-2-Dial task or an explicitly labeled non-equivalent text-metric screen. |
+| `simsum_symptom_ie` | KMUC | `requires_labels` | full_equivalence | Add dyspnea/cough/pain/nasal/fever labels or clinician-reviewed label projection before computing symptom F1. |
+| `simsum_symptom_ie` | Synthea | `requires_adapter` | full_equivalence | Derive respiratory symptom labels from structured conditions/observations and validate the projection before computing F1. |
+| `synthea_structured_ehr` | Synthea | `sde_proxy` | paper_equivalent_evidence | Replace the SDE proxy with the original paper's metric or cite a faithful paper-reported baseline. |
+| `synthea_structured_ehr` | HealthGymART | `sde_proxy` | paper_equivalent_evidence | Replace the SDE proxy with the original paper's metric or cite a faithful paper-reported baseline. |
+| `synthea_structured_ehr` | DeSynPUF | `sde_proxy` | paper_equivalent_evidence | Replace the SDE proxy with the original paper's metric or cite a faithful paper-reported baseline. |
+
 ## Source Notes
 
 - MedSynth original benchmark: https://arxiv.org/abs/2508.01401
