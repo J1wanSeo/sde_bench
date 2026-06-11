@@ -14,8 +14,9 @@ benchmarks used by prior synthetic medical dataset papers.
 | L3 | Paper-equivalent benchmark evidence | A cell is `computed` from the same required inputs or `paper_reported` from the original study. |
 | L4a | Family-level paper-equivalent benchmark matrix | Every benchmark family has origin-dataset evidence that is `computed` or `paper_reported`. |
 | L4b | Full cross-application benchmark matrix | Every intended cross-dataset comparison cell is L3, with no `requires_adapter`, `requires_labels`, or `sde_proxy` cells used as original-paper evidence. |
+| L5 | Independently recomputed original benchmarks | Every benchmark family's origin-dataset evidence is recomputed from available data and code, not only paper-reported. |
 
-The current repository is at **L4a**. It is not yet L4b.
+The current repository is at **L4a**. It is not yet L4b or L5.
 
 ## 2. Status Semantics
 
@@ -31,6 +32,12 @@ The current repository is at **L4a**. It is not yet L4b.
 `sde_proxy` must never be merged with `computed` or `paper_reported` in the
 paper-equivalent evidence count.
 
+`paper_reported` supports equivalence to the evidence level used in the original
+dataset paper's self-evaluation. It does not support an independent
+reproducibility claim. Manuscript language must therefore distinguish
+"represented by native self-evaluation evidence" from "independently recomputed
+by SDE-Bench."
+
 ## 3. Conservative Manuscript Claim
 
 Safe current wording:
@@ -40,16 +47,23 @@ Safe current wording:
 > level, each prior dataset's native self-evaluation protocol is represented by
 > computed or faithfully paper-reported evidence. Remaining adapter, label, and
 > proxy cells define additional cross-application work and are not used as
-> original-paper evidence.
+> original-paper evidence. This is a native-protocol evidence claim, not a claim
+> that all original benchmarks have been independently recomputed.
 
 Unsafe current wording:
 
 > SDE-Bench has already evaluated every prior dataset at the same level as each
 > dataset's original paper benchmark under every other dataset's task.
 
+Also unsafe:
+
+> SDE-Bench independently reproduced every prior dataset paper's original
+> benchmark result.
+
 That wording requires L4b evidence and is not supported while any intended
 cross-application comparison remains `requires_adapter`, `requires_labels`, or
-`sde_proxy`.
+`sde_proxy`. The independent-reproduction wording requires L5 evidence and is
+not supported while any origin-dataset family is only `paper_reported`.
 
 ## 4. Practical Acceptance Gate
 
@@ -66,10 +80,15 @@ generated cross-benchmark report must satisfy these gates:
    `paper_reported`.
 6. The manuscript reports skipped axes and does not use `overall_score` as the
    primary superiority claim.
+7. The manuscript reports the recomputed-vs-paper-reported split so readers can
+   distinguish native self-evaluation evidence from independent reproduction.
 
 Full cross-application equivalence is a stronger L4b claim and additionally
 requires that no intended comparison cell remains `requires_adapter` or
 `requires_labels`.
+
+Independent reproduction is a stronger L5 claim and additionally requires that
+every benchmark family has origin-dataset evidence marked `computed`.
 
 The `publication_readiness` section in `cross_benchmark_matrix.json` implements
 this gate.

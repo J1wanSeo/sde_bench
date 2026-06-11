@@ -292,6 +292,7 @@ def markdown_cross_benchmark(report: Report) -> str:
             "",
             f"Family-level status: `{readiness.get('family_level_claim_status', readiness.get('claim_status', 'unknown'))}`.",
             f"Cross-application status: `{readiness.get('cross_application_status', 'unknown')}`.",
+            f"Independent recomputation status: `{readiness.get('independent_recomputation_status', 'unknown')}`.",
             "",
             readiness.get("interpretation", ""),
             "",
@@ -377,6 +378,8 @@ def _publication_readiness(stage_a_original: dict[str, dict[str, Report]]) -> Re
     supplemental_proxy_cells = []
     evidence_counts = {
         "paper_equivalent_cells": 0,
+        "computed_cells": 0,
+        "paper_reported_cells": 0,
         "proxy_cells": 0,
         "blocking_cells": 0,
     }
@@ -388,6 +391,10 @@ def _publication_readiness(stage_a_original: dict[str, dict[str, Report]]) -> Re
             has_evidence_value = value not in {"", "n/a"} and not value.startswith("n/a: ")
             if status in paper_equivalent_statuses and has_evidence_value:
                 evidence_counts["paper_equivalent_cells"] += 1
+                if status == "computed":
+                    evidence_counts["computed_cells"] += 1
+                elif status == "paper_reported":
+                    evidence_counts["paper_reported_cells"] += 1
                 status_counts[status] = status_counts.get(status, 0) + 1
             elif status in proxy_statuses and has_evidence_value:
                 evidence_counts["proxy_cells"] += 1
@@ -430,6 +437,10 @@ def _publication_readiness(stage_a_original: dict[str, dict[str, Report]]) -> Re
         and proxy_separated
         and no_adapter_gaps
     )
+    independent_recomputation_ready = (
+        protocols_versioned
+        and family_evidence["families_total"] == family_evidence["families_with_recomputed_origin"]
+    )
     gates = [
         {
             "name": "Versioned original protocols",
@@ -444,7 +455,10 @@ def _publication_readiness(stage_a_original: dict[str, dict[str, Report]]) -> Re
         {
             "name": "Prior-paper baseline evidence",
             "status": "pass" if has_paper_reported_baselines else "fail",
-            "evidence": "Paper-reported cells are preserved separately from SDE-Bench scores.",
+            "evidence": (
+                f"{_plural(evidence_counts['paper_reported_cells'], 'paper-reported cell')} "
+                f"are preserved separately from {_plural(evidence_counts['computed_cells'], 'recomputed cell')}."
+            ),
         },
         {
             "name": "Proxy separation",
@@ -464,11 +478,22 @@ def _publication_readiness(stage_a_original: dict[str, dict[str, Report]]) -> Re
                 f"{family_evidence['families_total']} benchmark families have origin-dataset paper-equivalent evidence."
             ),
         },
+        {
+            "name": "Independent origin recomputation",
+            "status": "pass" if independent_recomputation_ready else "fail",
+            "evidence": (
+                f"{family_evidence['families_with_recomputed_origin']} of "
+                f"{family_evidence['families_total']} benchmark families "
+                f"{'has' if family_evidence['families_with_recomputed_origin'] == 1 else 'have'} "
+                "recomputed origin-dataset evidence."
+            ),
+        },
     ]
     if family_level_ready:
         interpretation = (
             "The matrix is ready to support a family-level paper-equivalent benchmark claim: "
             "each prior benchmark family has origin-dataset evidence that is either computed or faithfully paper-reported. "
+            "This is native-protocol evidence, not an independent reproduction claim. "
             "Full cross-application across incompatible dataset types remains a separate, not-yet-ready claim."
         )
         family_level_claim_status = "ready_for_family_level_equivalence"
@@ -482,10 +507,16 @@ def _publication_readiness(stage_a_original: dict[str, dict[str, Report]]) -> Re
     cross_application_status = (
         "ready_for_full_cross_application" if cross_application_ready else "not_ready_for_full_cross_application"
     )
+    independent_recomputation_status = (
+        "ready_for_independent_recomputation"
+        if independent_recomputation_ready
+        else "not_ready_for_independent_recomputation"
+    )
     return {
         "claim_status": family_level_claim_status,
         "family_level_claim_status": family_level_claim_status,
         "cross_application_status": cross_application_status,
+        "independent_recomputation_status": independent_recomputation_status,
         "interpretation": interpretation,
         "paper_equivalent_statuses": paper_equivalent_statuses,
         "proxy_statuses": proxy_statuses,
@@ -501,6 +532,8 @@ def _publication_readiness(stage_a_original: dict[str, dict[str, Report]]) -> Re
 
 def _family_evidence(stage_a_original: dict[str, dict[str, Report]]) -> Report:
     ready = 0
+    recomputed = 0
+    reported = 0
     details = []
     for family, cells in stage_a_original.items():
         origin_dataset = str(BENCHMARK_FAMILIES[family]["origin_dataset"])
@@ -511,6 +544,10 @@ def _family_evidence(stage_a_original: dict[str, dict[str, Report]]) -> Report:
         has_evidence = status in {"computed", "paper_reported"} and value not in {"", "n/a"} and not value.startswith("n/a: ")
         if has_evidence:
             ready += 1
+            if status == "computed":
+                recomputed += 1
+            elif status == "paper_reported":
+                reported += 1
         details.append(
             {
                 "benchmark_family": family,
@@ -518,11 +555,14 @@ def _family_evidence(stage_a_original: dict[str, dict[str, Report]]) -> Report:
                 "origin_column": origin_column,
                 "status": status,
                 "has_paper_equivalent_origin": has_evidence,
+                "evidence_source": "recomputed" if status == "computed" else "paper_reported" if status == "paper_reported" else "none",
             }
         )
     return {
         "families_total": len(stage_a_original),
         "families_with_paper_equivalent_origin": ready,
+        "families_with_recomputed_origin": recomputed,
+        "families_with_reported_origin": reported,
         "details": details,
     }
 
@@ -599,6 +639,10 @@ def _fmt(value: Any) -> str:
     if isinstance(value, int | float) and not isinstance(value, bool):
         return f"`{float(value):.4f}`"
     return f"`{value}`"
+
+
+def _plural(count: int, singular: str) -> str:
+    return f"{count} {singular if count == 1 else singular + 's'}"
 
 
 def _render_cell(cell: Report) -> str:

@@ -299,7 +299,8 @@
     "claim_status": "ready_for_family_level_equivalence",
     "family_level_claim_status": "ready_for_family_level_equivalence",
     "cross_application_status": "not_ready_for_full_cross_application",
-    "interpretation": "The matrix is ready to support a family-level paper-equivalent benchmark claim: each prior benchmark family has origin-dataset evidence that is either computed or faithfully paper-reported. Full cross-application across incompatible dataset types remains a separate, not-yet-ready claim.",
+    "independent_recomputation_status": "not_ready_for_independent_recomputation",
+    "interpretation": "The matrix is ready to support a family-level paper-equivalent benchmark claim: each prior benchmark family has origin-dataset evidence that is either computed or faithfully paper-reported. This is native-protocol evidence, not an independent reproduction claim. Full cross-application across incompatible dataset types remains a separate, not-yet-ready claim.",
     "paper_equivalent_statuses": [
       "computed",
       "paper_reported"
@@ -320,54 +321,64 @@
     },
     "evidence_counts": {
       "paper_equivalent_cells": 6,
+      "computed_cells": 1,
+      "paper_reported_cells": 5,
       "proxy_cells": 2,
       "blocking_cells": 3
     },
     "family_evidence_counts": {
       "families_total": 6,
       "families_with_paper_equivalent_origin": 6,
+      "families_with_recomputed_origin": 1,
+      "families_with_reported_origin": 5,
       "details": [
         {
           "benchmark_family": "kmuc_matching",
           "origin_dataset": "KMUC synthetic lay cases",
           "origin_column": "KMUC",
           "status": "computed",
-          "has_paper_equivalent_origin": true
+          "has_paper_equivalent_origin": true,
+          "evidence_source": "recomputed"
         },
         {
           "benchmark_family": "medsynth_dial_note",
           "origin_dataset": "MedSynth",
           "origin_column": "MedSynth",
           "status": "paper_reported",
-          "has_paper_equivalent_origin": true
+          "has_paper_equivalent_origin": true,
+          "evidence_source": "paper_reported"
         },
         {
           "benchmark_family": "simsum_symptom_ie",
           "origin_dataset": "SimSUM",
           "origin_column": "SimSUM",
           "status": "paper_reported",
-          "has_paper_equivalent_origin": true
+          "has_paper_equivalent_origin": true,
+          "evidence_source": "paper_reported"
         },
         {
           "benchmark_family": "synthea_structured_ehr",
           "origin_dataset": "Synthea",
           "origin_column": "Synthea",
           "status": "paper_reported",
-          "has_paper_equivalent_origin": true
+          "has_paper_equivalent_origin": true,
+          "evidence_source": "paper_reported"
         },
         {
           "benchmark_family": "healthgym_longitudinal_realism",
           "origin_dataset": "HealthGymART",
           "origin_column": "HealthGymART",
           "status": "paper_reported",
-          "has_paper_equivalent_origin": true
+          "has_paper_equivalent_origin": true,
+          "evidence_source": "paper_reported"
         },
         {
           "benchmark_family": "desynpuf_claims_public_use",
           "origin_dataset": "DE-SynPUF",
           "origin_column": "DeSynPUF",
           "status": "paper_reported",
-          "has_paper_equivalent_origin": true
+          "has_paper_equivalent_origin": true,
+          "evidence_source": "paper_reported"
         }
       ]
     },
@@ -429,7 +440,7 @@
       {
         "name": "Prior-paper baseline evidence",
         "status": "pass",
-        "evidence": "Paper-reported cells are preserved separately from SDE-Bench scores."
+        "evidence": "5 paper-reported cells are preserved separately from 1 recomputed cell."
       },
       {
         "name": "Proxy separation",
@@ -445,6 +456,11 @@
         "name": "Family-level origin evidence",
         "status": "pass",
         "evidence": "6 of 6 benchmark families have origin-dataset paper-equivalent evidence."
+      },
+      {
+        "name": "Independent origin recomputation",
+        "status": "fail",
+        "evidence": "1 of 6 benchmark families has recomputed origin-dataset evidence."
       }
     ]
   },

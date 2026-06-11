@@ -62,17 +62,19 @@ This keeps the paper claim defensible: KMUC can be shown against prior work's ow
 
 Family-level status: `ready_for_family_level_equivalence`.
 Cross-application status: `not_ready_for_full_cross_application`.
+Independent recomputation status: `not_ready_for_independent_recomputation`.
 
-The matrix is ready to support a family-level paper-equivalent benchmark claim: each prior benchmark family has origin-dataset evidence that is either computed or faithfully paper-reported. Full cross-application across incompatible dataset types remains a separate, not-yet-ready claim.
+The matrix is ready to support a family-level paper-equivalent benchmark claim: each prior benchmark family has origin-dataset evidence that is either computed or faithfully paper-reported. This is native-protocol evidence, not an independent reproduction claim. Full cross-application across incompatible dataset types remains a separate, not-yet-ready claim.
 
 | Gate | Status | Evidence |
 |---|---|---|
 | Versioned original protocols | `pass` | Every benchmark family has formula, required inputs, and applicability rules. |
 | Executable original metric | `pass` | 6 paper-equivalent cells are available. |
-| Prior-paper baseline evidence | `pass` | Paper-reported cells are preserved separately from SDE-Bench scores. |
+| Prior-paper baseline evidence | `pass` | 5 paper-reported cells are preserved separately from 1 recomputed cell. |
 | Proxy separation | `pass` | 2 SDE-derived proxy cells are excluded from paper-equivalent evidence. |
 | Adapter completeness | `fail` | 3 cells still require adapters or labels. |
 | Family-level origin evidence | `pass` | 6 of 6 benchmark families have origin-dataset paper-equivalent evidence. |
+| Independent origin recomputation | `fail` | 1 of 6 benchmark families has recomputed origin-dataset evidence. |
 
 SDE-derived proxy cells are not counted as original-paper evidence. They can support interoperability compatibility claims, but not a full paper-equivalent benchmark claim.
 

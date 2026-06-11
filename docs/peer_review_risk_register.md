@@ -104,15 +104,36 @@ Mitigation:
 
 - Add a publication-readiness gate to the generated cross-benchmark report.
 - Count only `computed` and `paper_reported` cells as paper-equivalent evidence.
-- State that the current package is an executable profile plus original-metric
-crosswalk until adapter and label gaps are closed.
+- State that the current package supports family-level native self-evaluation
+evidence, not full cross-application equivalence, until adapter and label gaps
+are closed.
+
+## 9. "`paper_reported` is not independent reproduction."
+
+Risk: A reviewer can object that preserving a prior paper's reported metric is
+not the same as rerunning that metric from raw data and code. Treating both as
+undifferentiated "paper-equivalent" evidence could sound like a reproducibility
+claim.
+
+Mitigation:
+
+- Keep `computed` and `paper_reported` as separate evidence counts in the
+publication-readiness JSON.
+- Use `paper_reported` only for equivalence to the original dataset paper's own
+self-evaluation evidence level.
+- Add an independent-recomputation status and mark it not ready until every
+origin-dataset benchmark family is recomputed.
+- Avoid saying that SDE-Bench has independently reproduced all original
+benchmarks.
 
 ## Recommended Reviewer-Safe Claim
 
 SDE-Bench provides a structured axis-level profile and original-metric crosswalk
-for heterogeneous synthetic medical datasets. It does not prove that one dataset
-is universally superior. In the current evidence, KMUC is strongest on clinical
-scope breadth and patient-facing department-matching utility, while structured
-public baselines remain stronger on longitudinal or interoperability-oriented
-axes. Full paper-equivalent benchmark claims should be limited to cells marked
-`computed` or `paper_reported`.
+for heterogeneous synthetic medical datasets. At the benchmark-family level, the
+current package represents prior datasets' native self-evaluation protocols with
+computed or faithfully paper-reported evidence. It does not prove that one
+dataset is universally superior, it does not provide full cross-application
+equivalence, and it does not independently reproduce every original benchmark.
+In the current evidence, KMUC is strongest on clinical scope breadth and
+patient-facing department-matching utility, while structured public baselines
+remain stronger on longitudinal or interoperability-oriented axes.

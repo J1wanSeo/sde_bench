@@ -963,6 +963,28 @@ class SdeBenchCliTests(unittest.TestCase):
         self.assertIn("Cross-application status", rendered)
         self.assertIn("ready_for_family_level_equivalence", rendered)
 
+    def test_publication_readiness_separates_reported_baselines_from_recomputed_evidence(self) -> None:
+        report = build_cross_benchmark_report(
+            {
+                "KMUC": {"overall_score": 0.8, "axes": {"medical_interoperability": {"score": None}}},
+                "Synthea": {"overall_score": 0.82, "axes": {"medical_interoperability": {"score": 1.0}}},
+                "HealthGymART": {"overall_score": 0.93, "axes": {"medical_interoperability": {"score": 0.9583333333333334}}},
+                "DeSynPUF": {"overall_score": 0.88, "axes": {"medical_interoperability": {"score": 0.9164644921676102}}},
+            }
+        )
+        readiness = report["publication_readiness"]
+        rendered = markdown_cross_benchmark(report)
+
+        self.assertEqual(readiness["independent_recomputation_status"], "not_ready_for_independent_recomputation")
+        self.assertEqual(readiness["evidence_counts"]["computed_cells"], 1)
+        self.assertEqual(readiness["evidence_counts"]["paper_reported_cells"], 5)
+        self.assertEqual(readiness["family_evidence_counts"]["families_with_recomputed_origin"], 1)
+        self.assertEqual(readiness["family_evidence_counts"]["families_with_reported_origin"], 5)
+        self.assertIn("Independent recomputation status", rendered)
+        self.assertIn("1 of 6 benchmark families has recomputed origin-dataset evidence", rendered)
+        self.assertIn("5 paper-reported cells are preserved separately from 1 recomputed cell", rendered)
+        self.assertIn("not an independent reproduction claim", rendered)
+
     def test_cli_writes_cross_benchmark_matrix(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
