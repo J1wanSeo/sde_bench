@@ -18,14 +18,14 @@
     "columns": 15
   },
   "sde_bench_run": {
-    "evaluation_scope": "sampled first 600 source rows because full privacy nearest-reference comparison is quadratic in current SDE-Bench",
-    "export_limit": 600,
-    "reference_records": 300,
-    "synthetic_records": 300,
-    "source_records": 300,
+    "evaluation_scope": "full patient split; nearest-reference privacy distance uses deterministic 1000x1000 sampling via privacy_distance_sample_size",
+    "export_limit": null,
+    "reference_records": 267480,
+    "synthetic_records": 267480,
+    "source_records": 267480,
     "target": "diagnosis_group",
     "sensitive_columns": ["sex", "ethnicity"],
-    "export_command": "PYTHONPATH=src python3 -m sde_bench health-gym-export --input data/public_raw/health_gym/HealthGymV2_CbdrhDatathon_ART4HIV.csv --out-dir reports/public_benchmarks/health_gym --format jsonl --limit 600",
+    "export_command": "PYTHONPATH=src python3 -m sde_bench health-gym-export --input data/public_raw/health_gym/HealthGymV2_CbdrhDatathon_ART4HIV.csv --out-dir reports/public_benchmarks/health_gym --format jsonl",
     "evaluate_command": "PYTHONPATH=src python3 -m sde_bench evaluate --real reports/public_benchmarks/health_gym/reference.jsonl --synthetic reports/public_benchmarks/health_gym/synthetic.jsonl --source reports/public_benchmarks/health_gym/source.jsonl --target diagnosis_group --sensitive sex,ethnicity --json-out reports/public_benchmarks/health_gym/report.json --md-out reports/public_benchmarks/health_gym/report.md"
   }
 }

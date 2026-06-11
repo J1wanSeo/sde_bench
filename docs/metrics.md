@@ -35,6 +35,10 @@ Measures simple memorization risk without requiring attack models.
   id/provenance fields.
 - `median_distance_to_reference`: median mixed-type nearest-reference distance.
 - `records_compared`: support count.
+- `distance_sampled`: whether nearest-reference distance used deterministic
+  sampling.
+- `distance_synthetic_records` and `distance_reference_records`: sample sizes
+  used for the nearest-reference distance calculation.
 
 Future modules should add membership inference and attribute disclosure risk.
 

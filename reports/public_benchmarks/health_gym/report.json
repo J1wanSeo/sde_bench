@@ -1,16 +1,16 @@
 {
   "schema_version": "0.1.0",
   "records": {
-    "real": 300,
-    "synthetic": 300
+    "real": 267480,
+    "synthetic": 267480
   },
   "config": "full_eval",
   "axes": {
     "medical_fidelity": {
-      "score": 0.7517063492063492,
+      "score": 0.9536583509581491,
       "metrics": {
-        "column_similarity": 0.8080555555555556,
-        "pairwise_similarity": 0.6953571428571428,
+        "column_similarity": 0.9138898235382085,
+        "pairwise_similarity": 0.9934268783780897,
         "columns_compared": 24,
         "pairs_compared": 28
       }
@@ -22,26 +22,29 @@
       }
     },
     "privacy": {
-      "score": 0.6103530753341886,
+      "score": 0.5928868231854607,
       "metrics": {
         "exact_duplicate_rate": 0.0,
-        "median_distance_to_reference": 0.2207061506683772,
-        "records_compared": 300
+        "median_distance_to_reference": 0.1857736463709213,
+        "records_compared": 267480,
+        "distance_synthetic_records": 1000,
+        "distance_reference_records": 1000,
+        "distance_sampled": true
       }
     },
     "equity": {
-      "score": 0.95,
+      "score": 0.998710183938986,
       "metrics": {
         "sensitive_columns": "sex,ethnicity",
-        "sensitive_distribution_similarity": 0.8999999999999999,
+        "sensitive_distribution_similarity": 0.9974203678779722,
         "group_target_parity": 1.0
       }
     },
     "medical_diversity": {
-      "score": 0.9224776344326872,
+      "score": 0.9659852206671716,
       "metrics": {
-        "category_coverage": 0.85,
-        "entropy_ratio": 0.9174329032980616,
+        "category_coverage": 0.9,
+        "entropy_ratio": 0.9979556620015149,
         "unique_record_ratio": 1.0,
         "categorical_columns": 20
       }
@@ -51,7 +54,7 @@
       "metrics": {
         "source_attribution_rate": 1.0,
         "evidence_support_score": 1.0,
-        "evidence_support_n": 300
+        "evidence_support_n": 267480
       }
     },
     "clinical_validity": {
@@ -76,7 +79,7 @@
       }
     }
   },
-  "overall_score": 0.8991087990383198,
+  "overall_score": 0.9336967390103876,
   "skipped": [],
   "name": "synthetic"
 }

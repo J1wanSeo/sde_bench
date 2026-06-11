@@ -9,5 +9,7 @@
     "clinical_groundedness",
     "clinical_validity",
     "medical_interoperability"
-  ]
+  ],
+  "privacy_distance_sample_size": 1000,
+  "description": "Run all SDE-Bench medical synthetic-data axes."
 }

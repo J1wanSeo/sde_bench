@@ -156,12 +156,12 @@
       "medical_interoperability": 1.0
     },
     "HealthGymART": {
-      "overall": 0.8991087990383198,
-      "medical_fidelity": 0.7517063492063492,
+      "overall": 0.9336967390103876,
+      "medical_fidelity": 0.9536583509581491,
       "clinical_task_utility": 1.0,
-      "privacy": 0.6103530753341886,
-      "equity": 0.95,
-      "medical_diversity": 0.9224776344326872,
+      "privacy": 0.5928868231854607,
+      "equity": 0.998710183938986,
+      "medical_diversity": 0.9659852206671716,
       "clinical_groundedness": 1.0,
       "clinical_validity": 1.0,
       "medical_interoperability": 0.9583333333333334

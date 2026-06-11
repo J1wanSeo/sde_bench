@@ -90,7 +90,7 @@ def evaluate(
         [
             ("medical_fidelity", _fidelity(real, synthetic)),
             ("clinical_task_utility", _utility(synthetic, target)),
-            ("privacy", _privacy(real, synthetic)),
+            ("privacy", _privacy(real, synthetic, sample_size=eval_config.get("privacy_distance_sample_size"))),
             ("equity", _fairness(real, synthetic, target, sensitive)),
             ("medical_diversity", _diversity(real, synthetic)),
             ("clinical_groundedness", _groundedness(synthetic, source)),
@@ -189,16 +189,21 @@ def _utility(synthetic: list[Record], target: str | None) -> dict[str, Any]:
     return {"score": _mean(score_values), "metrics": metrics}
 
 
-def _privacy(real: list[Record], synthetic: list[Record]) -> dict[str, Any]:
+def _privacy(real: list[Record], synthetic: list[Record], *, sample_size: Any = None) -> dict[str, Any]:
     real_fingerprints = {_fingerprint(row) for row in real}
     exact_duplicates = sum(1 for row in synthetic if _fingerprint(row) in real_fingerprints)
     duplicate_rate = exact_duplicates / len(synthetic)
-    distances = [_closest_distance(row, real) for row in synthetic]
+    distance_real = _deterministic_sample(real, sample_size)
+    distance_synthetic = _deterministic_sample(synthetic, sample_size)
+    distances = [_closest_distance(row, distance_real) for row in distance_synthetic]
     median_distance = statistics.median(distances) if distances else 0.0
     metrics = {
         "exact_duplicate_rate": duplicate_rate,
         "median_distance_to_reference": median_distance,
         "records_compared": len(synthetic),
+        "distance_synthetic_records": len(distance_synthetic),
+        "distance_reference_records": len(distance_real),
+        "distance_sampled": len(distance_synthetic) < len(synthetic) or len(distance_real) < len(real),
     }
     score = _clamp((1.0 - duplicate_rate + median_distance) / 2.0)
     return {"score": score, "metrics": metrics}
@@ -460,12 +465,23 @@ def _categorical_tv(left: list[Any], right: list[Any]) -> float:
 def _ks_distance(left: list[float], right: list[float]) -> float:
     if not left or not right:
         return 0.0
-    values = sorted(set(left) | set(right))
+    left_sorted = sorted(left)
+    right_sorted = sorted(right)
+    left_n = len(left_sorted)
+    right_n = len(right_sorted)
+    left_idx = 0
+    right_idx = 0
     max_diff = 0.0
-    for value in values:
-        l_cdf = sum(1 for x in left if x <= value) / len(left)
-        r_cdf = sum(1 for x in right if x <= value) / len(right)
-        max_diff = max(max_diff, abs(l_cdf - r_cdf))
+    while left_idx < left_n or right_idx < right_n:
+        if right_idx >= right_n or (left_idx < left_n and left_sorted[left_idx] <= right_sorted[right_idx]):
+            value = left_sorted[left_idx]
+        else:
+            value = right_sorted[right_idx]
+        while left_idx < left_n and left_sorted[left_idx] <= value:
+            left_idx += 1
+        while right_idx < right_n and right_sorted[right_idx] <= value:
+            right_idx += 1
+        max_diff = max(max_diff, abs(left_idx / left_n - right_idx / right_n))
     return max_diff
 
 
@@ -475,6 +491,18 @@ def _fingerprint(row: Record) -> tuple[tuple[str, str], ...]:
 
 def _closest_distance(row: Record, candidates: list[Record]) -> float:
     return min((_mixed_distance(row, candidate) for candidate in candidates), default=1.0)
+
+
+def _deterministic_sample(rows: list[Record], sample_size: Any) -> list[Record]:
+    if not isinstance(sample_size, int) or isinstance(sample_size, bool) or sample_size <= 0:
+        return rows
+    if len(rows) <= sample_size:
+        return rows
+    if sample_size == 1:
+        return [rows[0]]
+    last_index = len(rows) - 1
+    indexes = sorted({round(i * last_index / (sample_size - 1)) for i in range(sample_size)})
+    return [rows[index] for index in indexes]
 
 
 def _mixed_distance(left: Record, right: Record) -> float:

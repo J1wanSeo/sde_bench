@@ -92,9 +92,12 @@ longitudinal JSONL records:
 python3 -m sde_bench health-gym-export \
   --input data/public_raw/health_gym/HealthGymV2_CbdrhDatathon_ART4HIV.csv \
   --out-dir reports/public_benchmarks/health_gym \
-  --format jsonl \
-  --limit 600
+  --format jsonl
 ```
+
+For large datasets, nearest-reference privacy distance uses
+`privacy_distance_sample_size` from the selected evaluation config while exact
+duplicate rate and record counts remain full-dataset metrics.
 
 Multiple synthetic datasets:
 

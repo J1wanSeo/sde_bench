@@ -58,6 +58,12 @@ median_distance_to_reference = median_s min_r mixed_distance(s, r)
 privacy = ((1 - exact_duplicate_rate) + median_distance_to_reference) / 2
 ```
 
+For large datasets, `median_distance_to_reference` is computed on a deterministic
+stride sample controlled by `privacy_distance_sample_size` in the evaluation
+config. `exact_duplicate_rate` is still computed over all synthetic records.
+Reports include `distance_sampled`, `distance_synthetic_records`, and
+`distance_reference_records` so the sampling scope is explicit.
+
 Interpretation: high score means less exact copying and larger nearest-reference
 distance. This is a lightweight screen, not a replacement for membership
 inference or attribute disclosure attacks.

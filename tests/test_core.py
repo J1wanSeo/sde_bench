@@ -2,11 +2,13 @@ import csv
 import json
 import subprocess
 import sys
+import time
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from sde_bench import benchmark, evaluate, load_config, load_records
+from sde_bench.core import _ks_distance
 from sde_bench.adapters.health_gym import export_health_gym_art_records
 from sde_bench.adapters.kmuc import export_kmuc_records
 from sde_bench.adapters.medsynth import export_medsynth_records
@@ -255,6 +257,33 @@ class SdeBenchCoreTests(unittest.TestCase):
 
         self.assertIsNone(report["axes"]["equity"]["score"])
         self.assertEqual(report["axes"]["equity"]["metrics"]["skipped"], "no_sensitive_columns")
+
+    def test_privacy_distance_sampling_caps_quadratic_comparisons(self) -> None:
+        real = [{"case_id": f"R{i}", "age": i, "dept": "A" if i % 2 else "B"} for i in range(20)]
+        synthetic = [{"case_id": f"S{i}", "age": i + 1, "dept": "A" if i % 2 else "B"} for i in range(30)]
+
+        report = evaluate(
+            real=real,
+            synthetic=synthetic,
+            config={"axes": ["privacy"], "privacy_distance_sample_size": 5},
+        )
+
+        metrics = report["axes"]["privacy"]["metrics"]
+        self.assertEqual(metrics["records_compared"], 30)
+        self.assertEqual(metrics["distance_synthetic_records"], 5)
+        self.assertEqual(metrics["distance_reference_records"], 5)
+        self.assertTrue(metrics["distance_sampled"])
+
+    def test_ks_distance_handles_large_unique_numeric_columns_quickly(self) -> None:
+        left = [float(i) for i in range(5000)]
+        right = [float(i + 2500) for i in range(5000)]
+
+        start = time.perf_counter()
+        distance = _ks_distance(left, right)
+        elapsed = time.perf_counter() - start
+
+        self.assertAlmostEqual(distance, 0.5)
+        self.assertLess(elapsed, 0.25)
 
     def test_kmuc_adapter_exports_reference_source_and_lay_variant_records(self) -> None:
         enriched = [
