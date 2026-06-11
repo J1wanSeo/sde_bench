@@ -60,9 +60,10 @@ This keeps the paper claim defensible: KMUC can be shown against prior work's ow
 
 ## Publication Readiness Gate
 
-Current status: `not_ready_for_full_equivalence`.
+Family-level status: `ready_for_family_level_equivalence`.
+Cross-application status: `not_ready_for_full_cross_application`.
 
-The matrix is not ready for a full paper-equivalent benchmark claim. It supports a weaker claim: SDE-Bench provides an executable axis-level profile and an original-metric crosswalk, while remaining adapters and labels define the validation work still needed.
+The matrix is ready to support a family-level paper-equivalent benchmark claim: each prior benchmark family has origin-dataset evidence that is either computed or faithfully paper-reported. Full cross-application across incompatible dataset types remains a separate, not-yet-ready claim.
 
 | Gate | Status | Evidence |
 |---|---|---|
@@ -71,6 +72,7 @@ The matrix is not ready for a full paper-equivalent benchmark claim. It supports
 | Prior-paper baseline evidence | `pass` | Paper-reported cells are preserved separately from SDE-Bench scores. |
 | Proxy separation | `pass` | 2 SDE-derived proxy cells are excluded from paper-equivalent evidence. |
 | Adapter completeness | `fail` | 3 cells still require adapters or labels. |
+| Family-level origin evidence | `pass` | 6 of 6 benchmark families have origin-dataset paper-equivalent evidence. |
 
 SDE-derived proxy cells are not counted as original-paper evidence. They can support interoperability compatibility claims, but not a full paper-equivalent benchmark claim.
 

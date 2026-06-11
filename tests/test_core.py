@@ -881,7 +881,8 @@ class SdeBenchCliTests(unittest.TestCase):
         readiness = report["publication_readiness"]
         rendered = markdown_cross_benchmark(report)
 
-        self.assertEqual(readiness["claim_status"], "not_ready_for_full_equivalence")
+        self.assertEqual(readiness["claim_status"], "ready_for_family_level_equivalence")
+        self.assertEqual(readiness["cross_application_status"], "not_ready_for_full_cross_application")
         self.assertEqual(readiness["status_counts"]["sde_proxy"], 1)
         self.assertGreaterEqual(readiness["evidence_counts"]["paper_equivalent_cells"], 6)
         self.assertNotIn("sde_proxy", readiness["paper_equivalent_statuses"])
@@ -889,7 +890,7 @@ class SdeBenchCliTests(unittest.TestCase):
         self.assertFalse(any(cell["status"] == "sde_proxy" for cell in readiness["blocking_cells"]))
         self.assertIn("requires_adapter", readiness["blocking_statuses"])
         self.assertIn("Publication Readiness Gate", rendered)
-        self.assertIn("not ready for a full paper-equivalent benchmark claim", rendered)
+        self.assertIn("ready to support a family-level paper-equivalent benchmark claim", rendered)
         self.assertIn("Supplemental Proxy Cells", rendered)
 
     def test_cross_benchmark_readiness_lists_blocking_cells_with_next_actions(self) -> None:
@@ -940,6 +941,27 @@ class SdeBenchCliTests(unittest.TestCase):
         self.assertEqual(report["stage_a_original"]["desynpuf_claims_public_use"]["DeSynPUF"]["status"], "paper_reported")
         self.assertIn("healthgym_longitudinal_realism", report["benchmark_families"])
         self.assertIn("desynpuf_claims_public_use", report["benchmark_families"])
+
+    def test_publication_readiness_supports_family_level_equivalence_claim(self) -> None:
+        report = build_cross_benchmark_report(
+            {
+                "KMUC": {"overall_score": 0.8, "axes": {"medical_interoperability": {"score": None}}},
+                "Synthea": {"overall_score": 0.82, "axes": {"medical_interoperability": {"score": 1.0}}},
+                "HealthGymART": {"overall_score": 0.93, "axes": {"medical_interoperability": {"score": 0.9583333333333334}}},
+                "DeSynPUF": {"overall_score": 0.88, "axes": {"medical_interoperability": {"score": 0.9164644921676102}}},
+            }
+        )
+        readiness = report["publication_readiness"]
+        rendered = markdown_cross_benchmark(report)
+
+        self.assertEqual(readiness["family_level_claim_status"], "ready_for_family_level_equivalence")
+        self.assertEqual(readiness["cross_application_status"], "not_ready_for_full_cross_application")
+        self.assertEqual(readiness["claim_status"], "ready_for_family_level_equivalence")
+        self.assertEqual(readiness["family_evidence_counts"]["families_total"], 6)
+        self.assertEqual(readiness["family_evidence_counts"]["families_with_paper_equivalent_origin"], 6)
+        self.assertIn("Family-level status", rendered)
+        self.assertIn("Cross-application status", rendered)
+        self.assertIn("ready_for_family_level_equivalence", rendered)
 
     def test_cli_writes_cross_benchmark_matrix(self) -> None:
         with TemporaryDirectory() as tmp:

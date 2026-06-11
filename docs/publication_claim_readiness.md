@@ -12,9 +12,10 @@ benchmarks used by prior synthetic medical dataset papers.
 | L1 | Executable SDE-Bench profile | JSON/JSONL/CSV inputs run through documented axes with skipped metrics reported. |
 | L2 | Original-metric crosswalk | Prior-paper benchmark families list formula, required inputs, portability, and applicability state. |
 | L3 | Paper-equivalent benchmark evidence | A cell is `computed` from the same required inputs or `paper_reported` from the original study. |
-| L4 | Full paper-equivalent benchmark matrix | Every intended comparison cell is L3, with no `requires_adapter`, `requires_labels`, or `sde_proxy` cells used as original-paper evidence. |
+| L4a | Family-level paper-equivalent benchmark matrix | Every benchmark family has origin-dataset evidence that is `computed` or `paper_reported`. |
+| L4b | Full cross-application benchmark matrix | Every intended cross-dataset comparison cell is L3, with no `requires_adapter`, `requires_labels`, or `sde_proxy` cells used as original-paper evidence. |
 
-The current repository is at **L2 with selected L3 cells**. It is not yet L4.
+The current repository is at **L4a**. It is not yet L4b.
 
 ## 2. Status Semantics
 
@@ -35,24 +36,25 @@ paper-equivalent evidence count.
 Safe current wording:
 
 > SDE-Bench provides an executable axis-level profile and an original-metric
-> crosswalk for heterogeneous synthetic medical datasets. It reaches
-> paper-equivalent evidence for cells where the original metric is recomputed or
-> faithfully paper-reported, while remaining adapter, label, and proxy cells
-> define the validation work still needed for a full paper-equivalent benchmark
-> matrix.
+> crosswalk for heterogeneous synthetic medical datasets. At the benchmark-family
+> level, each prior dataset's native self-evaluation protocol is represented by
+> computed or faithfully paper-reported evidence. Remaining adapter, label, and
+> proxy cells define additional cross-application work and are not used as
+> original-paper evidence.
 
 Unsafe current wording:
 
 > SDE-Bench has already evaluated every prior dataset at the same level as each
-> dataset's original paper benchmark.
+> dataset's original paper benchmark under every other dataset's task.
 
-That wording requires L4 evidence and is not supported while any intended
-comparison remains `requires_adapter`, `requires_labels`, or `sde_proxy`.
+That wording requires L4b evidence and is not supported while any intended
+cross-application comparison remains `requires_adapter`, `requires_labels`, or
+`sde_proxy`.
 
 ## 4. Practical Acceptance Gate
 
-Before a manuscript claims full equivalence, the generated cross-benchmark
-report must satisfy all gates:
+Before a manuscript claims family-level paper-equivalent benchmarking, the
+generated cross-benchmark report must satisfy these gates:
 
 1. Every benchmark family has a formula, required inputs, and applicability rule.
 2. At least one target dataset has a `computed` original-metric result.
@@ -60,9 +62,14 @@ report must satisfy all gates:
    possible.
 4. `sde_proxy` cells are reported separately and excluded from paper-equivalent
    evidence.
-5. No intended comparison cell remains `requires_adapter` or `requires_labels`.
+5. Every benchmark family has origin-dataset evidence marked `computed` or
+   `paper_reported`.
 6. The manuscript reports skipped axes and does not use `overall_score` as the
    primary superiority claim.
+
+Full cross-application equivalence is a stronger L4b claim and additionally
+requires that no intended comparison cell remains `requires_adapter` or
+`requires_labels`.
 
 The `publication_readiness` section in `cross_benchmark_matrix.json` implements
 this gate.

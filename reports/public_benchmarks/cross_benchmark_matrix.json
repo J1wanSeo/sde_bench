@@ -296,8 +296,10 @@
     }
   },
   "publication_readiness": {
-    "claim_status": "not_ready_for_full_equivalence",
-    "interpretation": "The matrix is not ready for a full paper-equivalent benchmark claim. It supports a weaker claim: SDE-Bench provides an executable axis-level profile and an original-metric crosswalk, while remaining adapters and labels define the validation work still needed.",
+    "claim_status": "ready_for_family_level_equivalence",
+    "family_level_claim_status": "ready_for_family_level_equivalence",
+    "cross_application_status": "not_ready_for_full_cross_application",
+    "interpretation": "The matrix is ready to support a family-level paper-equivalent benchmark claim: each prior benchmark family has origin-dataset evidence that is either computed or faithfully paper-reported. Full cross-application across incompatible dataset types remains a separate, not-yet-ready claim.",
     "paper_equivalent_statuses": [
       "computed",
       "paper_reported"
@@ -320,6 +322,54 @@
       "paper_equivalent_cells": 6,
       "proxy_cells": 2,
       "blocking_cells": 3
+    },
+    "family_evidence_counts": {
+      "families_total": 6,
+      "families_with_paper_equivalent_origin": 6,
+      "details": [
+        {
+          "benchmark_family": "kmuc_matching",
+          "origin_dataset": "KMUC synthetic lay cases",
+          "origin_column": "KMUC",
+          "status": "computed",
+          "has_paper_equivalent_origin": true
+        },
+        {
+          "benchmark_family": "medsynth_dial_note",
+          "origin_dataset": "MedSynth",
+          "origin_column": "MedSynth",
+          "status": "paper_reported",
+          "has_paper_equivalent_origin": true
+        },
+        {
+          "benchmark_family": "simsum_symptom_ie",
+          "origin_dataset": "SimSUM",
+          "origin_column": "SimSUM",
+          "status": "paper_reported",
+          "has_paper_equivalent_origin": true
+        },
+        {
+          "benchmark_family": "synthea_structured_ehr",
+          "origin_dataset": "Synthea",
+          "origin_column": "Synthea",
+          "status": "paper_reported",
+          "has_paper_equivalent_origin": true
+        },
+        {
+          "benchmark_family": "healthgym_longitudinal_realism",
+          "origin_dataset": "HealthGymART",
+          "origin_column": "HealthGymART",
+          "status": "paper_reported",
+          "has_paper_equivalent_origin": true
+        },
+        {
+          "benchmark_family": "desynpuf_claims_public_use",
+          "origin_dataset": "DE-SynPUF",
+          "origin_column": "DeSynPUF",
+          "status": "paper_reported",
+          "has_paper_equivalent_origin": true
+        }
+      ]
     },
     "blocking_cells": [
       {
@@ -390,6 +440,11 @@
         "name": "Adapter completeness",
         "status": "fail",
         "evidence": "3 cells still require adapters or labels."
+      },
+      {
+        "name": "Family-level origin evidence",
+        "status": "pass",
+        "evidence": "6 of 6 benchmark families have origin-dataset paper-equivalent evidence."
       }
     ]
   },

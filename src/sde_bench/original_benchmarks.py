@@ -290,7 +290,8 @@ def markdown_cross_benchmark(report: Report) -> str:
             "",
             "## Publication Readiness Gate",
             "",
-            f"Current status: `{readiness.get('claim_status', 'unknown')}`.",
+            f"Family-level status: `{readiness.get('family_level_claim_status', readiness.get('claim_status', 'unknown'))}`.",
+            f"Cross-application status: `{readiness.get('cross_application_status', 'unknown')}`.",
             "",
             readiness.get("interpretation", ""),
             "",
@@ -412,9 +413,17 @@ def _publication_readiness(stage_a_original: dict[str, dict[str, Report]]) -> Re
         for cells in stage_a_original.values()
         for cell in cells.values()
     )
+    family_evidence = _family_evidence(stage_a_original)
     proxy_separated = "sde_proxy" not in paper_equivalent_statuses
     no_adapter_gaps = evidence_counts["blocking_cells"] == 0
-    full_equivalence_ready = (
+    family_level_ready = (
+        protocols_versioned
+        and has_computed_original
+        and has_paper_reported_baselines
+        and proxy_separated
+        and family_evidence["families_total"] == family_evidence["families_with_paper_equivalent_origin"]
+    )
+    cross_application_ready = (
         protocols_versioned
         and has_computed_original
         and has_paper_reported_baselines
@@ -447,32 +456,85 @@ def _publication_readiness(stage_a_original: dict[str, dict[str, Report]]) -> Re
             "status": "pass" if no_adapter_gaps else "fail",
             "evidence": f"{evidence_counts['blocking_cells']} cells still require adapters or labels.",
         },
+        {
+            "name": "Family-level origin evidence",
+            "status": "pass" if family_level_ready else "fail",
+            "evidence": (
+                f"{family_evidence['families_with_paper_equivalent_origin']} of "
+                f"{family_evidence['families_total']} benchmark families have origin-dataset paper-equivalent evidence."
+            ),
+        },
     ]
-    if full_equivalence_ready:
+    if family_level_ready:
         interpretation = (
-            "The matrix is ready to support a full paper-equivalent benchmark claim, "
-            "subject to reporting the same data splits and required labels."
+            "The matrix is ready to support a family-level paper-equivalent benchmark claim: "
+            "each prior benchmark family has origin-dataset evidence that is either computed or faithfully paper-reported. "
+            "Full cross-application across incompatible dataset types remains a separate, not-yet-ready claim."
         )
-        claim_status = "ready_for_full_equivalence"
+        family_level_claim_status = "ready_for_family_level_equivalence"
     else:
         interpretation = (
-            "The matrix is not ready for a full paper-equivalent benchmark claim. "
+            "The matrix is not ready for a family-level paper-equivalent benchmark claim. "
             "It supports a weaker claim: SDE-Bench provides an executable axis-level profile and an original-metric crosswalk, "
             "while remaining adapters and labels define the validation work still needed."
         )
-        claim_status = "not_ready_for_full_equivalence"
+        family_level_claim_status = "not_ready_for_family_level_equivalence"
+    cross_application_status = (
+        "ready_for_full_cross_application" if cross_application_ready else "not_ready_for_full_cross_application"
+    )
     return {
-        "claim_status": claim_status,
+        "claim_status": family_level_claim_status,
+        "family_level_claim_status": family_level_claim_status,
+        "cross_application_status": cross_application_status,
         "interpretation": interpretation,
         "paper_equivalent_statuses": paper_equivalent_statuses,
         "proxy_statuses": proxy_statuses,
         "blocking_statuses": blocking_statuses,
         "status_counts": status_counts,
         "evidence_counts": evidence_counts,
+        "family_evidence_counts": family_evidence,
         "blocking_cells": blocking_cells,
         "supplemental_proxy_cells": supplemental_proxy_cells,
         "gates": gates,
     }
+
+
+def _family_evidence(stage_a_original: dict[str, dict[str, Report]]) -> Report:
+    ready = 0
+    details = []
+    for family, cells in stage_a_original.items():
+        origin_dataset = str(BENCHMARK_FAMILIES[family]["origin_dataset"])
+        origin_column = _origin_column(origin_dataset)
+        cell = cells.get(origin_column, {})
+        status = str(cell.get("status", "unknown"))
+        value = str(cell.get("value", ""))
+        has_evidence = status in {"computed", "paper_reported"} and value not in {"", "n/a"} and not value.startswith("n/a: ")
+        if has_evidence:
+            ready += 1
+        details.append(
+            {
+                "benchmark_family": family,
+                "origin_dataset": origin_dataset,
+                "origin_column": origin_column,
+                "status": status,
+                "has_paper_equivalent_origin": has_evidence,
+            }
+        )
+    return {
+        "families_total": len(stage_a_original),
+        "families_with_paper_equivalent_origin": ready,
+        "details": details,
+    }
+
+
+def _origin_column(origin_dataset: str) -> str:
+    if origin_dataset.startswith("KMUC"):
+        return "KMUC"
+    if origin_dataset == "HealthGymART":
+        return "HealthGymART"
+    if origin_dataset == "DE-SynPUF":
+        return "DeSynPUF"
+    return origin_dataset
 
 
 def _blocking_cell(family: str, dataset: str, cell: Report, *, blocks: str) -> Report:
