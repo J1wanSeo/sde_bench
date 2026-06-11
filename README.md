@@ -24,12 +24,12 @@ SDE-Bench reports nine axes.
 | `privacy` | Duplicate and nearest-reference memorization risk | SynthEval-style |
 | `equity` | Sensitive-attribute distribution and group-target parity | Medical fairness/equity axis |
 | `medical_diversity` | Coverage, entropy, and unique-record diversity | Synthetic-data benchmark core |
-| `clinical_scope_generalizability` | Breadth across departments, diagnosis groups, procedures, demographics, scenarios, and task signals | SDE-Bench medical extension |
+| `clinical_scope_breadth` | Breadth across departments, diagnosis groups, procedures, demographics, scenarios, and task signals | SDE-Bench medical extension |
 | `clinical_groundedness` | Source attribution and evidence support for generated clinical claims | SDE-Bench medical extension |
 | `clinical_validity` | Rule/source consistency for fields such as ICD-10, procedure, acuity, laterality, department, and diagnosis | SDE-Bench medical extension |
 | `medical_interoperability` | OMOP/FHIR-style structural readiness when longitudinal EHR fields are present | SDE-Bench medical extension |
 
-The SDE-specific axes are `clinical_scope_generalizability`,
+The SDE-specific axes are `clinical_scope_breadth`,
 `clinical_groundedness`, `clinical_validity`, and `medical_interoperability`.
 They are intended for LLM + RAG pipelines and medical synthetic EHRs, where the
 important question is not only whether records resemble a target distribution,

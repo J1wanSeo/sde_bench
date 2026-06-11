@@ -136,15 +136,15 @@
         "value": "n/a: no interoperability fields"
       },
       "Synthea": {
-        "status": "computed_from_sde_bench",
+        "status": "sde_proxy",
         "value": "`medical_interoperability=1.0000`"
       },
       "HealthGymART": {
-        "status": "computed_from_sde_bench",
+        "status": "sde_proxy",
         "value": "`medical_interoperability=0.9583`"
       },
       "DeSynPUF": {
-        "status": "computed_from_sde_bench",
+        "status": "sde_proxy",
         "value": "`medical_interoperability=0.9165`"
       }
     }
@@ -157,7 +157,7 @@
       "privacy": 0.5,
       "equity": 0.8474370304904993,
       "medical_diversity": 1.0,
-      "clinical_scope_generalizability": 0.9770433208236664,
+      "clinical_scope_breadth": 0.9770433208236664,
       "clinical_groundedness": 0.5027767752858937,
       "clinical_validity": 0.9408333333333333,
       "medical_interoperability": null
@@ -169,7 +169,7 @@
       "privacy": 0.724945977393617,
       "equity": null,
       "medical_diversity": 0.7198019873040828,
-      "clinical_scope_generalizability": 0.3826701317273949,
+      "clinical_scope_breadth": 0.3826701317273949,
       "clinical_groundedness": 0.8127883611589785,
       "clinical_validity": 1.0,
       "medical_interoperability": null
@@ -181,7 +181,7 @@
       "privacy": 0.134,
       "equity": null,
       "medical_diversity": 0.7648129808134755,
-      "clinical_scope_generalizability": 0.20857374355071315,
+      "clinical_scope_breadth": 0.20857374355071315,
       "clinical_groundedness": 0.8539725114403292,
       "clinical_validity": 1.0,
       "medical_interoperability": null
@@ -193,7 +193,7 @@
       "privacy": 0.7520974099099099,
       "equity": 0.7253629739821494,
       "medical_diversity": 0.8122649225222588,
-      "clinical_scope_generalizability": 0.6652327185180466,
+      "clinical_scope_breadth": 0.6652327185180466,
       "clinical_groundedness": 1.0,
       "clinical_validity": 0.9974402730375426,
       "medical_interoperability": 1.0
@@ -205,7 +205,7 @@
       "privacy": 0.5928868231854607,
       "equity": 0.998710183938986,
       "medical_diversity": 0.9659852206671716,
-      "clinical_scope_generalizability": 0.2252844800233509,
+      "clinical_scope_breadth": 0.2252844800233509,
       "clinical_groundedness": 1.0,
       "clinical_validity": 1.0,
       "medical_interoperability": 0.9583333333333334
@@ -217,7 +217,7 @@
       "privacy": 0.7537736547095412,
       "equity": 0.9200643840609725,
       "medical_diversity": 0.9278790924954515,
-      "clinical_scope_generalizability": 0.8156155903007395,
+      "clinical_scope_breadth": 0.8156155903007395,
       "clinical_groundedness": 1.0,
       "clinical_validity": 0.9393476502830442,
       "medical_interoperability": 0.9164644921676102

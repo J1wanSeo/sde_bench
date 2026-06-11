@@ -60,7 +60,7 @@ medical breadth or generalizability axis.
 - `entropy_ratio`: synthetic/reference entropy ratio.
 - `unique_record_ratio`: fraction of unique synthetic record fingerprints.
 
-### Clinical Scope Generalizability
+### Clinical Scope Breadth
 
 Measures whether a dataset spans a broad and reusable medical scope rather than
 only being internally diverse within a narrow disease or workflow.

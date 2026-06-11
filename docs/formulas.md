@@ -101,7 +101,7 @@ medical_diversity = mean(category_coverage, entropy_ratio, unique_record_ratio)
 Interpretation: high score means the synthetic set covers the reference support
 without collapsing to repeated records.
 
-## 6. Clinical Scope Generalizability
+## 6. Clinical Scope Breadth
 
 For a set of values `V` and a target breadth cap `K`:
 
@@ -122,7 +122,7 @@ demographic_scope = mean(absolute_scope(age bins, 5),
 scenario_scope = absolute_scope(acuity, tone, setting, visit type,
                                 scenario, or chronic-condition signals, 6)
 task_scope = absolute_scope(available task signals, 4)
-clinical_scope_generalizability = mean(department_scope,
+clinical_scope_breadth = mean(department_scope,
                                        diagnosis_scope,
                                        procedure_scope,
                                        demographic_scope,

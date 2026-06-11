@@ -73,7 +73,7 @@ score rather than penalizing unstructured text datasets.
    split of one generated sample, not a real-vs-synthetic training holdout.
 5. Health Gym ART shows strong longitudinal structured-data scores in the full
    patient split, especially fidelity, equity, diversity, groundedness,
-   validity, and interoperability. Its low `clinical_scope_generalizability`
+   validity, and interoperability. Its low `clinical_scope_breadth`
    reflects that it is mainly an HIV/ART dataset, not a broad multi-specialty
    synthetic medical dataset.
 6. KMUC's weakest current SDE-Bench axis is lexical `clinical_groundedness`

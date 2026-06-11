@@ -1,6 +1,6 @@
 # SDE-Bench Improvement Directions
 
-## 1. Why Diversity Is Not Generalizability
+## 1. Why Diversity Is Not Scope Breadth
 
 `medical_diversity` measures whether synthetic records preserve the reference
 support and avoid repetition. It answers: "within this dataset's declared
@@ -22,12 +22,12 @@ fidelity, diversity, groundedness, validity, and interoperability.
 
 Its clinical scope is narrow: one disease family, no department labels, no broad
 procedure vocabulary, and no multi-specialty patient-intent task. The
-`clinical_scope_generalizability` axis makes that limitation visible while still
+`clinical_scope_breadth` axis makes that limitation visible while still
 preserving its strength as a structured longitudinal benchmark.
 
 ## 3. Current Score Pattern
 
-After adding `clinical_scope_generalizability`, the current Stage B SDE-Bench
+After adding `clinical_scope_breadth`, the current Stage B SDE-Bench
 scores show the intended separation:
 
 | Dataset | Overall | Scope | Main Interpretation |
@@ -81,8 +81,8 @@ scores show the intended separation:
 
 SDE-Bench distinguishes two properties often mixed together in prior synthetic
 health-data evaluation: internal distribution quality and clinical scope
-generalizability. HealthGymART demonstrates high-quality narrow longitudinal
-generation, while KMUC demonstrates broad multi-specialty patient-facing
-coverage and matching-task utility. Adding semantic grounding and structured
-interoperability exports should make KMUC's intended contribution measurable
-without relying on a metric that simply rewards one data format.
+breadth. HealthGymART demonstrates high-quality narrow longitudinal generation,
+while KMUC demonstrates broad multi-specialty patient-facing coverage and
+matching-task utility. Adding semantic grounding and structured interoperability
+exports should make KMUC's intended contribution measurable without relying on a
+metric that simply rewards one data format.

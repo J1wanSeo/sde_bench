@@ -10,7 +10,7 @@
 | privacy | 0.5000 | exact_duplicate_rate=0.0000, median_distance_to_reference=0.0000, records_compared=750, distance_synthetic_records=750, distance_reference_records=150, distance_sampled=False |
 | equity | 0.8474 | sensitive_columns=sex, sensitive_distribution_similarity=1.0000, group_target_parity=0.6949 |
 | medical_diversity | 1.0000 | category_coverage=1.0000, entropy_ratio=1.0000, unique_record_ratio=1.0000, categorical_columns=7 |
-| clinical_scope_generalizability | 0.9770 | department_scope=1.0000, department_unique=15, diagnosis_scope=0.9798, diagnosis_unique=20, procedure_scope=1.0000, procedure_unique=73, demographic_scope=0.9219, age_group_unique=5, sex_or_gender_unique=2, scenario_scope=0.9606, scenario_unique=8, task_scope=1.0000, task_signal_unique=5 |
+| clinical_scope_breadth | 0.9770 | department_scope=1.0000, department_unique=15, diagnosis_scope=0.9798, diagnosis_unique=20, procedure_scope=1.0000, procedure_unique=73, demographic_scope=0.9219, age_group_unique=5, sex_or_gender_unique=2, scenario_scope=0.9606, scenario_unique=8, task_scope=1.0000, task_signal_unique=5 |
 | clinical_groundedness | 0.5028 | source_attribution_rate=1.0000, evidence_support_score=0.0056, evidence_support_n=750 |
 | clinical_validity | 0.9408 | age_validity=1.0000, non_empty_diagnosis_rate=1.0000, icd10_format_validity=1.0000, procedure_completeness=0.5267, acuity_validity=1.0000, laterality_validity=1.0000, dept_consistency=1.0000, diagnosis_source_overlap=1.0000 |
 | medical_interoperability | n/a | skipped=no_interoperability_fields |

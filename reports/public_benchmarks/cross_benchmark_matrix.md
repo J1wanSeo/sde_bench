@@ -12,7 +12,9 @@ The first layer is stronger for publication because it avoids evaluating prior w
 | Stage | Question | Rows | Columns |
 |---|---|---|---|
 | Stage A | How do KMUC and public datasets perform under each prior dataset's original benchmark? | Original benchmark families | KMUC plus public synthetic datasets |
-| Stage B | How do all datasets compare under SDE-Bench? | Datasets | SDE-Bench axes and overall score |
+| Stage B | How do all datasets compare under SDE-Bench? | Datasets | SDE-Bench axes and available-axis mean score |
+
+`Overall` is an available-axis mean. It is a compact summary for sorting, not a superiority claim, because unavailable axes are excluded rather than penalized.
 
 ## Original Benchmark Families
 
@@ -30,7 +32,7 @@ The first layer is stronger for publication because it avoids evaluating prior w
 | `kmuc_matching` | `computed`: `dept_top1=0.7467`, `dept_hit@5=0.8800`, `mrr_dept=0.7943`, `proc_coverage@5=0.5889`, `icd_coverage@5=0.5931` | `not_applicable` (no expected department or doctor index) | `not_applicable` (respiratory symptoms only, no department labels) | `not_applicable` (structured EHR lacks KMUC doctor/procedure retrieval labels) | `not_applicable` (no expected department or doctor index) | `not_applicable` (claims tables lack KMUC doctor/procedure retrieval labels) |
 | `medsynth_dial_note` | `requires_adapter` | `paper_reported`: Dial-2-Note `60.0%/95.0%/52.5%`; Note-2-Dial `55.0%/87.5%/80.0%` jury preference | `not_applicable` (no dialogue-note pairs) | `not_applicable` (no dialogue-note pairs) | `not_applicable` (no dialogue-note pairs) | `not_applicable` (no dialogue-note pairs) |
 | `simsum_symptom_ie` | `requires_labels` | `not_applicable` (no gold dyspnea/cough/pain/nasal/fever labels) | `paper_reported`: normal F1 dyspnea `0.9617`, cough `0.9603`, pain `0.8143`, nasal `0.9628`, fever `0.9096`; compact F1 dyspnea `0.9444`, cough `0.9397`, pain `0.7940`, nasal `0.9622`, fever `0.9010` | `requires_adapter`: derive respiratory symptoms from Synthea conditions/observations | `not_applicable` (longitudinal HIV ART data lacks respiratory symptom labels) | `not_applicable` (claims data lacks respiratory symptom labels) |
-| `synthea_structured_ehr` | `not_applicable` | `not_applicable` (no interoperability fields) | `not_applicable` (no interoperability fields) | `computed_from_sde_bench`: `medical_interoperability=1.0000` | `computed_from_sde_bench`: `medical_interoperability=0.9583` | `computed_from_sde_bench`: `medical_interoperability=0.9165` |
+| `synthea_structured_ehr` | `not_applicable` | `not_applicable` (no interoperability fields) | `not_applicable` (no interoperability fields) | `sde_proxy`: `medical_interoperability=1.0000` | `sde_proxy`: `medical_interoperability=0.9583` | `sde_proxy`: `medical_interoperability=0.9165` |
 
 ## Stage B: SDE-Bench Cross-Dataset Results
 
@@ -47,7 +49,7 @@ The first layer is stronger for publication because it avoids evaluating prior w
 
 1. Keep each original paper protocol as a versioned benchmark family with explicit formula, required inputs, and applicability rules.
 2. Add executable dataset-to-original-benchmark adapters for cells currently marked `requires_adapter` or `requires_labels`.
-3. For each Stage A cell, emit one of four states: `computed`, `paper_reported`, `requires_adapter`, or `not_applicable`.
+3. For each Stage A cell, emit one of five states: `computed`, `paper_reported`, `sde_proxy`, `requires_adapter`, or `not_applicable`. Treat `sde_proxy` as a compatibility proxy, not an original paper metric.
 4. Compare numeric cells only when the same benchmark family, data split, and required labels are present. Otherwise, report the applicability state as part of the result.
 
 This keeps the paper claim defensible: KMUC can be shown against prior work's own tasks where portable, while SDE-Bench explains the common medical synthetic-data profile across heterogeneous datasets.

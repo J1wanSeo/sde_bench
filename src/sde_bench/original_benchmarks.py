@@ -102,9 +102,9 @@ STAGE_B: dict[str, dict[str, Report]] = {
     "synthea_structured_ehr": {
         "MedSynth": {"status": "not_applicable", "value": "n/a: text pair dataset"},
         "SimSUM": {"status": "not_applicable", "value": "n/a: single-encounter tabular/text benchmark"},
-        "Synthea": {"status": "computed_from_sde_bench", "value": ""},
-        "HealthGymART": {"status": "computed_from_sde_bench", "value": ""},
-        "DeSynPUF": {"status": "computed_from_sde_bench", "value": ""},
+        "Synthea": {"status": "sde_proxy", "value": ""},
+        "HealthGymART": {"status": "sde_proxy", "value": ""},
+        "DeSynPUF": {"status": "sde_proxy", "value": ""},
     },
 }
 
@@ -161,7 +161,9 @@ def markdown_cross_benchmark(report: Report) -> str:
         "| Stage | Question | Rows | Columns |",
         "|---|---|---|---|",
         "| Stage A | How do KMUC and public datasets perform under each prior dataset's original benchmark? | Original benchmark families | KMUC plus public synthetic datasets |",
-        "| Stage B | How do all datasets compare under SDE-Bench? | Datasets | SDE-Bench axes and overall score |",
+        "| Stage B | How do all datasets compare under SDE-Bench? | Datasets | SDE-Bench axes and available-axis mean score |",
+        "",
+        "`Overall` is an available-axis mean. It is a compact summary for sorting, not a superiority claim, because unavailable axes are excluded rather than penalized.",
         "",
         "## Original Benchmark Families",
         "",
@@ -200,7 +202,7 @@ def markdown_cross_benchmark(report: Report) -> str:
         lines.append(
             f"| {dataset} | {_fmt(summary['overall'])} | {_fmt(summary['medical_fidelity'])} | "
             f"{_fmt(summary['clinical_task_utility'])} | {_fmt(summary['privacy'])} | {_fmt(summary['equity'])} | "
-            f"{_fmt(summary['medical_diversity'])} | {_fmt(summary['clinical_scope_generalizability'])} | "
+            f"{_fmt(summary['medical_diversity'])} | {_fmt(summary['clinical_scope_breadth'])} | "
             f"{_fmt(summary['clinical_groundedness'])} | "
             f"{_fmt(summary['clinical_validity'])} | {_fmt(summary['medical_interoperability'])} |"
         )
@@ -214,8 +216,8 @@ def markdown_cross_benchmark(report: Report) -> str:
             "inputs, and applicability rules.",
             "2. Add executable dataset-to-original-benchmark adapters for cells currently marked `requires_adapter` or "
             "`requires_labels`.",
-            "3. For each Stage A cell, emit one of four states: `computed`, `paper_reported`, `requires_adapter`, "
-            "or `not_applicable`.",
+            "3. For each Stage A cell, emit one of five states: `computed`, `paper_reported`, `sde_proxy`, "
+            "`requires_adapter`, or `not_applicable`. Treat `sde_proxy` as a compatibility proxy, not an original paper metric.",
             "4. Compare numeric cells only when the same benchmark family, data split, and required labels are present. "
             "Otherwise, report the applicability state as part of the result.",
             "",
@@ -238,7 +240,7 @@ def _sde_summary(report: Report) -> Report:
         "privacy": _axis_score(report, "privacy"),
         "equity": _axis_score(report, "equity"),
         "medical_diversity": _axis_score(report, "medical_diversity"),
-        "clinical_scope_generalizability": _axis_score(report, "clinical_scope_generalizability"),
+        "clinical_scope_breadth": _axis_score(report, "clinical_scope_breadth"),
         "clinical_groundedness": _axis_score(report, "clinical_groundedness"),
         "clinical_validity": _axis_score(report, "clinical_validity"),
         "medical_interoperability": _axis_score(report, "medical_interoperability"),

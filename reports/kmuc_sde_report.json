@@ -51,7 +51,7 @@
         "categorical_columns": 7
       }
     },
-    "clinical_scope_generalizability": {
+    "clinical_scope_breadth": {
       "score": 0.9770433208236664,
       "metrics": {
         "department_scope": 1.0,

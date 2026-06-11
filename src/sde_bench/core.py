@@ -17,7 +17,7 @@ AXIS_ORDER = [
     "privacy",
     "equity",
     "medical_diversity",
-    "clinical_scope_generalizability",
+    "clinical_scope_breadth",
     "clinical_groundedness",
     "clinical_validity",
     "medical_interoperability",
@@ -99,7 +99,7 @@ def evaluate(
             ("privacy", _privacy(real, synthetic, sample_size=eval_config.get("privacy_distance_sample_size"))),
             ("equity", _fairness(real, synthetic, target, sensitive)),
             ("medical_diversity", _diversity(real, synthetic)),
-            ("clinical_scope_generalizability", _scope_generalizability(synthetic)),
+            ("clinical_scope_breadth", _scope_breadth(synthetic)),
             ("clinical_groundedness", _groundedness(synthetic, source)),
             ("clinical_validity", _clinical_validity(synthetic, source)),
             ("medical_interoperability", _medical_interoperability(synthetic)),
@@ -257,7 +257,7 @@ def _diversity(real: list[Record], synthetic: list[Record]) -> dict[str, Any]:
     return {"score": _mean(score_values), "metrics": metrics}
 
 
-def _scope_generalizability(synthetic: list[Record]) -> dict[str, Any]:
+def _scope_breadth(synthetic: list[Record]) -> dict[str, Any]:
     departments = _scope_values(synthetic, ["dept", "expected_dept", "department", "specialty"])
     diagnoses = _diagnosis_scope_values(synthetic)
     procedures = _scope_values(synthetic, ["procedures", "procedure", "procedure_group"])

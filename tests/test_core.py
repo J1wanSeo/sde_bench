@@ -137,7 +137,7 @@ class SdeBenchCoreTests(unittest.TestCase):
                 "privacy",
                 "equity",
                 "medical_diversity",
-                "clinical_scope_generalizability",
+                "clinical_scope_breadth",
                 "clinical_groundedness",
                 "clinical_validity",
                 "medical_interoperability",
@@ -149,7 +149,7 @@ class SdeBenchCoreTests(unittest.TestCase):
         self.assertAlmostEqual(report["axes"]["clinical_task_utility"]["metrics"]["label_accuracy"], 2 / 3)
         self.assertLess(report["axes"]["clinical_task_utility"]["score"], 1.0)
 
-    def test_scope_generalizability_separates_broad_medical_scope_from_internal_diversity(self) -> None:
+    def test_scope_breadth_separates_broad_medical_scope_from_internal_diversity(self) -> None:
         broad = []
         for index, (dept, diagnosis_group, procedure, age, sex, acuity) in enumerate(
             [
@@ -193,12 +193,13 @@ class SdeBenchCoreTests(unittest.TestCase):
         broad_report = evaluate(real=broad, synthetic=broad, target="dept")
         narrow_report = evaluate(real=narrow, synthetic=narrow, target="diagnosis_group")
 
-        broad_scope = broad_report["axes"]["clinical_scope_generalizability"]
-        narrow_scope = narrow_report["axes"]["clinical_scope_generalizability"]
+        broad_scope = broad_report["axes"]["clinical_scope_breadth"]
+        narrow_scope = narrow_report["axes"]["clinical_scope_breadth"]
         self.assertGreater(broad_scope["score"], narrow_scope["score"])
         self.assertGreater(broad_scope["metrics"]["department_scope"], narrow_scope["metrics"]["department_scope"])
         self.assertEqual(narrow_scope["metrics"]["department_unique"], 1)
-        self.assertIn("clinical_scope_generalizability", broad_report["axes"])
+        self.assertIn("clinical_scope_breadth", broad_report["axes"])
+        self.assertNotIn("clinical_scope_generalizability", broad_report["axes"])
 
     def test_clinical_validity_includes_medical_validity_metrics(self) -> None:
         report = evaluate(
@@ -800,8 +801,12 @@ class SdeBenchCliTests(unittest.TestCase):
         self.assertEqual(report["stage_a_original"]["kmuc_matching"]["KMUC"]["status"], "computed")
         self.assertEqual(report["stage_a_original"]["simsum_symptom_ie"]["SimSUM"]["status"], "paper_reported")
         self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["Synthea"]["value"], "`medical_interoperability=1.0000`")
+        self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["Synthea"]["status"], "sde_proxy")
         self.assertIn("Stage A: Original-Metric Crosswalk", rendered)
         self.assertIn("Stage B: SDE-Bench Cross-Dataset Results", rendered)
+        self.assertIn("available-axis mean", rendered)
+        self.assertIn("`sde_proxy`", rendered)
+        self.assertNotIn("computed_from_sde_bench", rendered)
         self.assertLess(rendered.index("**Original-benchmark layer**"), rendered.index("**SDE-Bench layer**"))
         self.assertIn("medical_interoperability=1.0000", rendered)
 
@@ -840,6 +845,7 @@ class SdeBenchCliTests(unittest.TestCase):
         self.assertIn("metric_formula", synthea_family)
         self.assertIn("applicability_rule", synthea_family)
         self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["KMUC"]["status"], "not_applicable")
+        self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["Synthea"]["status"], "sde_proxy")
         self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["Synthea"]["value"], "`medical_interoperability=1.0000`")
         self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["HealthGymART"]["value"], "`medical_interoperability=0.9583`")
         self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["DeSynPUF"]["value"], "`medical_interoperability=0.9165`")
