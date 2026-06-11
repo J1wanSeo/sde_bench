@@ -44,6 +44,8 @@ The current domain-expansion survey is generated at
 `reports/public_benchmarks/domain_dataset_survey.md`. It records medical,
 finance, and science candidates, their native original-paper metrics, and the
 adapter work needed before a dataset can be marked `evaluated`.
+The medical-first candidate check is recorded at
+`reports/public_benchmarks/medical_candidate_triage.md`.
 
 ## External Public Candidates
 
