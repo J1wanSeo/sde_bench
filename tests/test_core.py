@@ -9,6 +9,7 @@ from tempfile import TemporaryDirectory
 
 from sde_bench import benchmark, evaluate, load_config, load_records
 from sde_bench.core import _ks_distance
+from sde_bench.adapters.amlsim import export_amlsim_records
 from sde_bench.adapters.health_gym import export_health_gym_art_records
 from sde_bench.adapters.kmuc import export_kmuc_records
 from sde_bench.adapters.medsynth import export_medsynth_records
@@ -485,6 +486,39 @@ class SdeBenchCoreTests(unittest.TestCase):
         self.assertIn("measurement", exported["synthetic"][0]["omop_domains"])
         self.assertEqual(exported["synthetic"][0]["standard_vocabularies"], "LOINC|RxNorm|SNOMED-CT")
 
+    def test_amlsim_adapter_exports_transaction_records(self) -> None:
+        rows = [
+            {
+                "TXN_ID": "1",
+                "ACCOUNT_ID": "1000000001",
+                "COUNTER_PARTY_ACCOUNT_NUM": "9000000001",
+                "TXN_SOURCE_TYPE_CODE": "CHECK",
+                "tx_count": "1",
+                "TXN_AMOUNT_ORIG": "120.50",
+                "start": "1",
+                "end": "1",
+            },
+            {
+                "TXN_ID": "2",
+                "ACCOUNT_ID": "1000000002",
+                "COUNTER_PARTY_ACCOUNT_NUM": "9000000002",
+                "TXN_SOURCE_TYPE_CODE": "WIRE",
+                "tx_count": "3",
+                "TXN_AMOUNT_ORIG": "5000",
+                "start": "2",
+                "end": "2",
+            },
+        ]
+
+        exported = export_amlsim_records(rows, split_fraction=0.5)
+
+        self.assertEqual(exported["reference"][0]["case_id"], "AMLSIM-TXN-1")
+        self.assertEqual(exported["synthetic"][0]["case_id"], "AMLSIM-TXN-2")
+        self.assertEqual(exported["synthetic"][0]["source_id"], exported["source"][0]["source_id"])
+        self.assertEqual(exported["synthetic"][0]["transaction_type"], "WIRE")
+        self.assertEqual(exported["synthetic"][0]["amount"], 5000)
+        self.assertEqual(exported["synthetic"][0]["expected_transaction_type"], "WIRE")
+
 
 class SdeBenchCliTests(unittest.TestCase):
     def test_domain_survey_prioritizes_medical_and_cross_domain_candidates(self) -> None:
@@ -930,6 +964,59 @@ class SdeBenchCliTests(unittest.TestCase):
             self.assertEqual(proc.returncode, 0, proc.stderr)
             exported = load_records(out_dir / "synthetic.jsonl")
             self.assertEqual(exported[0]["patient_id"], "1")
+            self.assertTrue((out_dir / "reference.jsonl").exists())
+            self.assertTrue((out_dir / "source.jsonl").exists())
+
+    def test_cli_exports_amlsim_files(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            input_path = root / "tx.csv"
+            out_dir = root / "out"
+            write_csv(
+                input_path,
+                [
+                    {
+                        "TXN_ID": "1",
+                        "ACCOUNT_ID": "1000000001",
+                        "COUNTER_PARTY_ACCOUNT_NUM": "9000000001",
+                        "TXN_SOURCE_TYPE_CODE": "CHECK",
+                        "tx_count": "1",
+                        "TXN_AMOUNT_ORIG": "120.50",
+                        "start": "1",
+                        "end": "1",
+                    },
+                    {
+                        "TXN_ID": "2",
+                        "ACCOUNT_ID": "1000000002",
+                        "COUNTER_PARTY_ACCOUNT_NUM": "9000000002",
+                        "TXN_SOURCE_TYPE_CODE": "WIRE",
+                        "tx_count": "3",
+                        "TXN_AMOUNT_ORIG": "5000",
+                        "start": "2",
+                        "end": "2",
+                    },
+                ],
+            )
+
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "sde_bench",
+                    "amlsim-export",
+                    "--input",
+                    str(input_path),
+                    "--out-dir",
+                    str(out_dir),
+                ],
+                check=False,
+                text=True,
+                capture_output=True,
+            )
+
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            exported = load_records(out_dir / "synthetic.jsonl")
+            self.assertEqual(exported[0]["transaction_type"], "WIRE")
             self.assertTrue((out_dir / "reference.jsonl").exists())
             self.assertTrue((out_dir / "source.jsonl").exists())
 

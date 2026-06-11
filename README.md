@@ -95,6 +95,16 @@ python3 -m sde_bench health-gym-export \
   --format jsonl
 ```
 
+The AMLSim adapter maps public synthetic financial transactions into the same
+record interface for cross-domain stress tests:
+
+```bash
+python3 -m sde_bench amlsim-export \
+  --input data/public_raw/amlsim/tx.csv \
+  --out-dir reports/public_benchmarks/amlsim \
+  --format jsonl
+```
+
 For large datasets, nearest-reference privacy distance uses
 `privacy_distance_sample_size` from the selected evaluation config while exact
 duplicate rate and record counts remain full-dataset metrics.

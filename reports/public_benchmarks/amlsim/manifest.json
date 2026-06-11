@@ -1,0 +1,32 @@
+{
+  "dataset_id": "amlsim_transactions_sample",
+  "dataset_name": "IBM AMLSim sample transaction outputs",
+  "domain": "finance",
+  "source": {
+    "repository": "https://github.com/IBM/AMLSim",
+    "raw_transaction_csv": "https://raw.githubusercontent.com/IBM/AMLSim/7338a4bcb1af9bcfea2201ad7daccfe2a4d569ca/sample/outputs/tx.csv",
+    "license": "Apache-2.0"
+  },
+  "source_shape": {
+    "reported_records": 45,
+    "columns": 8,
+    "native_format": "transaction CSV"
+  },
+  "sde_bench_run": {
+    "evaluation_scope": "public sample transaction output; internal synthetic-only split, first partition as reference and second partition as evaluated synthetic set",
+    "export_limit": null,
+    "reference_records": 22,
+    "synthetic_records": 23,
+    "source_records": 23,
+    "target": "transaction_type",
+    "sensitive_columns": [],
+    "preset": "core_eval",
+    "export_command": "PYTHONPATH=src python -m sde_bench amlsim-export --input data/public_raw/amlsim/tx.csv --out-dir reports/public_benchmarks/amlsim --format jsonl",
+    "evaluate_command": "PYTHONPATH=src python -m sde_bench evaluate --real reports/public_benchmarks/amlsim/reference.jsonl --synthetic reports/public_benchmarks/amlsim/synthetic.jsonl --source reports/public_benchmarks/amlsim/source.jsonl --target transaction_type --preset core_eval --json-out reports/public_benchmarks/amlsim/report.json --md-out reports/public_benchmarks/amlsim/report.md"
+  },
+  "interpretation_notes": [
+    "This is a small public AMLSim sample, not a full-scale AML benchmark run.",
+    "The common SDE-Bench core axes are reused for finance, so fidelity/diversity/privacy are meaningful but medical-only axes are intentionally omitted.",
+    "Utility is transaction-type population coverage because the sample has no downstream fraud labels or analyst predictions."
+  ]
+}

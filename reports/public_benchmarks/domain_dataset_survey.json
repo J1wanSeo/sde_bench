@@ -7,7 +7,7 @@
     "Report candidate cells as not_applicable or requires_adapter until an adapter and command exist."
   ],
   "domain_counts": {
-    "finance": 3,
+    "finance": 4,
     "medical": 8,
     "science": 3
   },
@@ -56,6 +56,15 @@
       "source_url": "https://doi.org/10.6084/m9.figshare.22827878.v1",
       "current_report": "reports/public_benchmarks/health_gym/report.md",
       "sde_bench_plan": "longitudinal synthetic ART monthly-record benchmark"
+    },
+    {
+      "dataset_id": "amlsim_transactions_sample",
+      "domain": "finance",
+      "name": "IBM AMLSim sample transactions",
+      "status": "evaluated",
+      "source_url": "https://github.com/IBM/AMLSim",
+      "current_report": "reports/public_benchmarks/amlsim/report.md",
+      "sde_bench_plan": "transaction-level finance benchmark using a public synthetic AML simulator sample"
     }
   ],
   "candidate_datasets": [

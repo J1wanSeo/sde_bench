@@ -52,6 +52,15 @@ EVALUATED_DATASETS: list[Report] = [
         "current_report": "reports/public_benchmarks/health_gym/report.md",
         "sde_bench_plan": "longitudinal synthetic ART monthly-record benchmark",
     },
+    {
+        "dataset_id": "amlsim_transactions_sample",
+        "domain": "finance",
+        "name": "IBM AMLSim sample transactions",
+        "status": "evaluated",
+        "source_url": "https://github.com/IBM/AMLSim",
+        "current_report": "reports/public_benchmarks/amlsim/report.md",
+        "sde_bench_plan": "transaction-level finance benchmark using a public synthetic AML simulator sample",
+    },
 ]
 
 

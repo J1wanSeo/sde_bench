@@ -1,0 +1,57 @@
+{
+  "schema_version": "0.1.0",
+  "records": {
+    "real": 22,
+    "synthetic": 23
+  },
+  "config": "core_eval",
+  "axes": {
+    "medical_fidelity": {
+      "score": 0.491600790513834,
+      "metrics": {
+        "column_similarity": 0.5849802371541502,
+        "pairwise_similarity": 0.39822134387351776,
+        "columns_compared": 8,
+        "pairs_compared": 6
+      }
+    },
+    "clinical_task_utility": {
+      "score": 1.0,
+      "metrics": {
+        "target_population_rate": 1.0
+      }
+    },
+    "privacy": {
+      "score": 0.668712185851691,
+      "metrics": {
+        "exact_duplicate_rate": 0.0,
+        "median_distance_to_reference": 0.33742437170338196,
+        "records_compared": 23,
+        "distance_synthetic_records": 23,
+        "distance_reference_records": 22,
+        "distance_sampled": false
+      }
+    },
+    "equity": {
+      "score": null,
+      "metrics": {
+        "skipped": "no_sensitive_columns"
+      }
+    },
+    "medical_diversity": {
+      "score": 0.884687329299919,
+      "metrics": {
+        "category_coverage": 0.7400793650793651,
+        "entropy_ratio": 0.913982622820392,
+        "unique_record_ratio": 1.0,
+        "categorical_columns": 4
+      }
+    }
+  },
+  "overall_score": 0.761250076416361,
+  "skipped": [
+    "equity.group_metrics: provide sensitive columns such as sex/gender/race",
+    "medical_interoperability: provide OMOP/FHIR/CSV-derived interoperability fields"
+  ],
+  "name": "synthetic"
+}

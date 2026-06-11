@@ -13,7 +13,7 @@ This report expands SDE-Bench beyond the currently evaluated medical datasets wh
 
 | Domain | Count |
 |---|---:|
-| finance | `3` |
+| finance | `4` |
 | medical | `8` |
 | science | `3` |
 
@@ -26,6 +26,7 @@ This report expands SDE-Bench beyond the currently evaluated medical datasets wh
 | `simsum_respiratory` | medical | SimSUM | reports/public_benchmarks/simsum/report.md |
 | `synthea_ehr_sample` | medical | Synthea sample EHR | reports/public_benchmarks/synthea/report.md |
 | `health_gym_art_hiv` | medical | Health Gym ART for HIV | reports/public_benchmarks/health_gym/report.md |
+| `amlsim_transactions_sample` | finance | IBM AMLSim sample transactions | reports/public_benchmarks/amlsim/report.md |
 
 ## Candidate Datasets
 

@@ -4,6 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
+from .adapters.amlsim import export_amlsim_records
 from .adapters.health_gym import export_health_gym_art_records
 from .adapters.kmuc import export_kmuc_records
 from .adapters.medsynth import export_medsynth_records
@@ -73,6 +74,13 @@ def main(argv: list[str] | None = None) -> int:
     health_gym_parser.add_argument("--format", choices=["jsonl", "json", "csv"], default="jsonl")
     health_gym_parser.add_argument("--split-fraction", type=float, default=0.5)
     health_gym_parser.add_argument("--limit", type=int, default=None)
+
+    amlsim_parser = sub.add_parser("amlsim-export", help="export AMLSim transaction CSV records to SDE-Bench records")
+    amlsim_parser.add_argument("--input", required=True, type=Path, help="AMLSim tx.csv path")
+    amlsim_parser.add_argument("--out-dir", required=True, type=Path)
+    amlsim_parser.add_argument("--format", choices=["jsonl", "json", "csv"], default="jsonl")
+    amlsim_parser.add_argument("--split-fraction", type=float, default=0.5)
+    amlsim_parser.add_argument("--limit", type=int, default=None)
 
     cross_parser = sub.add_parser("cross-benchmark", help="build original-paper benchmark cross-evaluation matrix")
     cross_parser.add_argument(
@@ -152,6 +160,19 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "health-gym-export":
         exported = export_health_gym_art_records(load_records(args.input), split_fraction=args.split_fraction, limit=args.limit)
+        args.out_dir.mkdir(parents=True, exist_ok=True)
+        suffix = f".{args.format}"
+        write_records(exported["reference"], args.out_dir / f"reference{suffix}")
+        write_records(exported["source"], args.out_dir / f"source{suffix}")
+        write_records(exported["synthetic"], args.out_dir / f"synthetic{suffix}")
+        print(
+            f"exported reference={len(exported['reference'])} source={len(exported['source'])} "
+            f"synthetic={len(exported['synthetic'])} to {args.out_dir}"
+        )
+        return 0
+
+    if args.command == "amlsim-export":
+        exported = export_amlsim_records(load_records(args.input), split_fraction=args.split_fraction, limit=args.limit)
         args.out_dir.mkdir(parents=True, exist_ok=True)
         suffix = f".{args.format}"
         write_records(exported["reference"], args.out_dir / f"reference{suffix}")
