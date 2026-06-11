@@ -1,0 +1,7 @@
+{
+  "name": "privacy_eval",
+  "axes": [
+    "privacy",
+    "groundedness"
+  ]
+}

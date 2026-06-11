@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sde-bench"
+version = "0.1.0"
+description = "Synthetic Dataset Effectiveness Benchmark with groundedness and domain-consistency metrics."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "SDE-Bench contributors" }]
+keywords = ["synthetic-data", "benchmark", "evaluation", "llm", "rag", "healthcare"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.scripts]
+sde-bench = "sde_bench.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+sde_bench = ["configs/*.json"]

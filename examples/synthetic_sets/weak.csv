@@ -1,0 +1,4 @@
+case_id,source_id,age,sex,dept,diagnosis,claim,evidence,expected_dept,predicted_dept
+W1,A,12,F,PY,unknown,unknown complaint,,OS,PY
+W2,B,13,F,PY,unknown,unknown complaint,,GI,PY
+W3,C,14,F,PY,unknown,unknown complaint,,NS,PY

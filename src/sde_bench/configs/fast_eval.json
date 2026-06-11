@@ -1,0 +1,11 @@
+{
+  "name": "fast_eval",
+  "axes": [
+    "fidelity",
+    "utility",
+    "diversity",
+    "groundedness",
+    "domain_consistency"
+  ]
+}
+

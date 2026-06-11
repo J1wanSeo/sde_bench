@@ -1,0 +1,5 @@
+case_id,source_id,age,sex,dept,diagnosis,claim,evidence,expected_dept,predicted_dept
+S1,A,41,F,OS,ACL tear,ACL tear requiring arthroscopy,ACL tear requiring arthroscopy,OS,OS
+S2,B,56,M,GI,gastric ulcer,gastric ulcer follow-up,gastric ulcer follow-up,GI,GI
+S3,C,71,F,NS,spinal stenosis,spinal stenosis with leg pain,spinal stenosis with leg pain,NS,OS
+

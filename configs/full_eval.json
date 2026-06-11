@@ -1,0 +1,14 @@
+{
+  "name": "full_eval",
+  "axes": [
+    "fidelity",
+    "utility",
+    "privacy",
+    "fairness",
+    "diversity",
+    "groundedness",
+    "domain_consistency"
+  ],
+  "description": "Run all SynthEval-style axes plus SDE-Bench groundedness and domain-consistency axes."
+}
+

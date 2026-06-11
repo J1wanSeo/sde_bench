@@ -1,0 +1,8 @@
+{
+  "name": "privacy_eval",
+  "axes": [
+    "privacy",
+    "groundedness"
+  ],
+  "description": "Focus on memorization, duplicate, nearest-reference, and source-attribution checks."
+}

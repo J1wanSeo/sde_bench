@@ -1,0 +1,5 @@
+case_id,age,sex,dept,diagnosis
+A,40,F,OS,ACL tear
+B,55,M,GI,gastric ulcer
+C,70,F,NS,spinal stenosis
+

@@ -1,0 +1,12 @@
+{
+  "name": "fast_eval",
+  "axes": [
+    "fidelity",
+    "utility",
+    "diversity",
+    "groundedness",
+    "domain_consistency"
+  ],
+  "description": "Use inexpensive metrics for iteration during synthetic-data generation."
+}
+

@@ -1,0 +1,13 @@
+{
+  "name": "full_eval",
+  "axes": [
+    "fidelity",
+    "utility",
+    "privacy",
+    "fairness",
+    "diversity",
+    "groundedness",
+    "domain_consistency"
+  ]
+}
+
