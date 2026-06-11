@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sde-bench"
 version = "0.1.0"
-description = "Synthetic Dataset Effectiveness Benchmark with groundedness and domain-consistency metrics."
+description = "Synthetic Medical Dataset Effectiveness Benchmark with clinical utility, groundedness, and validity metrics."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"

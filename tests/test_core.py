@@ -7,6 +7,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from sde_bench import benchmark, evaluate, load_config, load_records
+from sde_bench.adapters.kmuc import export_kmuc_records
 
 
 def write_csv(path: Path, rows: list[dict]) -> None:
@@ -14,6 +15,13 @@ def write_csv(path: Path, rows: list[dict]) -> None:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
+
+
+def write_jsonl(path: Path, rows: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as handle:
+        for row in rows:
+            handle.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
 class SdeBenchCoreTests(unittest.TestCase):
@@ -34,7 +42,19 @@ class SdeBenchCoreTests(unittest.TestCase):
         self.assertEqual(records[1]["age"], 53.5)
         self.assertEqual(records[0]["dept"], "OS")
 
-    def test_evaluate_returns_syntheval_axes_plus_groundedness_and_domain_consistency(self) -> None:
+    def test_load_records_accepts_json_and_jsonl_medical_datasets(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            json_path = root / "records.json"
+            jsonl_path = root / "records.jsonl"
+            rows = [{"case_id": "A", "age": 42, "dept": "OS"}]
+            json_path.write_text(json.dumps(rows), encoding="utf-8")
+            write_jsonl(jsonl_path, rows)
+
+            self.assertEqual(load_records(json_path), rows)
+            self.assertEqual(load_records(jsonl_path), rows)
+
+    def test_evaluate_returns_medical_benchmark_axes(self) -> None:
         real = [
             {"case_id": "A", "age": 40, "dept": "OS", "sex": "F", "diagnosis": "ACL tear"},
             {"case_id": "B", "age": 55, "dept": "GI", "sex": "M", "diagnosis": "gastric ulcer"},
@@ -89,20 +109,55 @@ class SdeBenchCoreTests(unittest.TestCase):
         self.assertEqual(
             list(report["axes"]),
             [
-                "fidelity",
-                "utility",
+                "medical_fidelity",
+                "clinical_task_utility",
                 "privacy",
-                "fairness",
-                "diversity",
-                "groundedness",
-                "domain_consistency",
+                "equity",
+                "medical_diversity",
+                "clinical_groundedness",
+                "clinical_validity",
             ],
         )
-        self.assertGreater(report["axes"]["fidelity"]["score"], 0.8)
-        self.assertAlmostEqual(report["axes"]["groundedness"]["metrics"]["source_attribution_rate"], 1.0)
-        self.assertAlmostEqual(report["axes"]["domain_consistency"]["metrics"]["dept_consistency"], 1.0)
-        self.assertAlmostEqual(report["axes"]["utility"]["metrics"]["label_accuracy"], 2 / 3)
-        self.assertLess(report["axes"]["utility"]["score"], 1.0)
+        self.assertGreater(report["axes"]["medical_fidelity"]["score"], 0.8)
+        self.assertAlmostEqual(report["axes"]["clinical_groundedness"]["metrics"]["source_attribution_rate"], 1.0)
+        self.assertAlmostEqual(report["axes"]["clinical_validity"]["metrics"]["dept_consistency"], 1.0)
+        self.assertAlmostEqual(report["axes"]["clinical_task_utility"]["metrics"]["label_accuracy"], 2 / 3)
+        self.assertLess(report["axes"]["clinical_task_utility"]["score"], 1.0)
+
+    def test_clinical_validity_includes_medical_validity_metrics(self) -> None:
+        report = evaluate(
+            real=[{"case_id": "A", "age": 40, "dept": "OS", "diagnosis": "ACL tear"}],
+            synthetic=[
+                {
+                    "case_id": "S1",
+                    "age": 40,
+                    "dept": "OS",
+                    "diagnosis": "ACL tear",
+                    "icd10_codes": "S83,I10",
+                    "procedures": "ACL reconstruction",
+                    "acuity": "elective",
+                    "laterality": "left",
+                },
+                {
+                    "case_id": "S2",
+                    "age": 130,
+                    "dept": "OS",
+                    "diagnosis": "",
+                    "icd10_codes": "BADCODE",
+                    "procedures": "",
+                    "acuity": "unknown",
+                    "laterality": "up",
+                },
+            ],
+            target="dept",
+        )
+
+        metrics = report["axes"]["clinical_validity"]["metrics"]
+        self.assertEqual(metrics["icd10_format_validity"], 0.5)
+        self.assertEqual(metrics["procedure_completeness"], 0.5)
+        self.assertEqual(metrics["acuity_validity"], 0.5)
+        self.assertEqual(metrics["laterality_validity"], 0.5)
+        self.assertEqual(metrics["age_validity"], 0.5)
 
     def test_benchmark_ranks_multiple_synthetic_datasets(self) -> None:
         real = [
@@ -118,7 +173,7 @@ class SdeBenchCoreTests(unittest.TestCase):
         self.assertGreater(ranked["ranking"][0]["overall_score"], ranked["ranking"][1]["overall_score"])
 
     def test_custom_axis_config_filters_report_axes(self) -> None:
-        config = load_config({"axes": ["privacy", "groundedness"]})
+        config = load_config({"axes": ["privacy", "clinical_groundedness"]})
 
         report = evaluate(
             real=[{"case_id": "A", "age": 40, "dept": "OS"}],
@@ -126,12 +181,49 @@ class SdeBenchCoreTests(unittest.TestCase):
             config=config,
         )
 
-        self.assertEqual(list(report["axes"]), ["privacy", "groundedness"])
+        self.assertEqual(list(report["axes"]), ["privacy", "clinical_groundedness"])
 
     def test_bundled_privacy_preset_loads_by_name(self) -> None:
         config = load_config("privacy_eval")
 
-        self.assertEqual(config["axes"], ["privacy", "groundedness"])
+        self.assertEqual(config["axes"], ["privacy", "clinical_groundedness"])
+
+    def test_kmuc_adapter_exports_reference_source_and_lay_variant_records(self) -> None:
+        enriched = [
+            {
+                "case_id": "KMUC-OS-001",
+                "source": "data/patient_cases/001.md",
+                "raw_chart": "가상환자A01 (M/72)\n",
+                "extraction": {
+                    "current_diagnosis": "Fx femoral neck",
+                    "planned_procedure": "ORIF",
+                    "icd10_candidates": ["S72"],
+                    "procedure_candidates": ["ORIF"],
+                    "acuity": "urgent",
+                    "laterality": "left",
+                    "dept_hint": ["OS"],
+                },
+                "labels": {"expected_department": "OS"},
+            }
+        ]
+        lay = [
+            {
+                "case_id": "KMUC-OS-001",
+                "variant_id": 0,
+                "tone": "plain_self",
+                "lay_text": "왼쪽 고관절 골절로 수술 상담을 받고 싶어요.",
+                "original_emr": "가상환자A01 (M/72)\n",
+                "expected_dept": "OS",
+            }
+        ]
+
+        exported = export_kmuc_records(enriched, lay_variants=lay)
+
+        self.assertEqual(exported["reference"][0]["case_id"], "KMUC-OS-001")
+        self.assertEqual(exported["source"][0]["source_id"], "KMUC-OS-001")
+        self.assertEqual(exported["synthetic"][0]["source_id"], "KMUC-OS-001")
+        self.assertEqual(exported["synthetic"][0]["claim"], "왼쪽 고관절 골절로 수술 상담을 받고 싶어요.")
+        self.assertEqual(exported["synthetic"][0]["evidence"], "가상환자A01 (M/72)\n")
 
 
 class SdeBenchCliTests(unittest.TestCase):
@@ -172,8 +264,77 @@ class SdeBenchCliTests(unittest.TestCase):
 
             self.assertEqual(proc.returncode, 0, proc.stderr)
             report = json.loads(out_json.read_text(encoding="utf-8"))
-            self.assertIn("groundedness", report["axes"])
+            self.assertIn("clinical_groundedness", report["axes"])
             self.assertIn("SDE-Bench Report", out_md.read_text(encoding="utf-8"))
+
+    def test_cli_exports_kmuc_files(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo_root = root / "kmuc"
+            parsed = repo_root / "layer3_datasets/patient_dataset/parsed"
+            enriched_path = parsed / "patient_cases.v2.enriched.jsonl"
+            lay_path = parsed / "patient_cases.v2.lay.jsonl"
+            predictions_path = root / "predictions.json"
+            out_dir = root / "out"
+            write_jsonl(
+                enriched_path,
+                [
+                    {
+                        "case_id": "KMUC-OS-001",
+                        "raw_chart": "가상환자A01 (F/45)\n",
+                        "extraction": {
+                            "current_diagnosis": "ACL tear",
+                            "procedure_candidates": ["ACL reconstruction"],
+                            "icd10_candidates": ["S83.5"],
+                            "acuity": "elective",
+                            "laterality": "right",
+                        },
+                        "labels": {"expected_department": "OS"},
+                    }
+                ],
+            )
+            write_jsonl(
+                lay_path,
+                [
+                    {
+                        "case_id": "KMUC-OS-001",
+                        "variant_id": 0,
+                        "tone": "plain_self",
+                        "lay_text": "무릎 인대 파열로 진료를 받고 싶어요.",
+                        "original_emr": "가상환자A01 (F/45)\n",
+                        "expected_dept": "OS",
+                    }
+                ],
+            )
+            predictions_path.write_text(
+                json.dumps({"per_case": [{"case_id": "KMUC-OS-001", "variant_id": 0, "top_depts": ["OS"]}]}),
+                encoding="utf-8",
+            )
+
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "sde_bench",
+                    "kmuc-export",
+                    "--repo-root",
+                    str(repo_root),
+                    "--predictions",
+                    str(predictions_path),
+                    "--out-dir",
+                    str(out_dir),
+                ],
+                check=False,
+                text=True,
+                capture_output=True,
+            )
+
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            exported = load_records(out_dir / "synthetic_lay.jsonl")
+            self.assertEqual(exported[0]["source_id"], "KMUC-OS-001")
+            self.assertEqual(exported[0]["predicted_dept"], "OS")
+            self.assertTrue((out_dir / "reference.jsonl").exists())
+            self.assertTrue((out_dir / "source.jsonl").exists())
 
 
 if __name__ == "__main__":

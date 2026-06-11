@@ -7,13 +7,13 @@ from importlib import resources
 
 
 DEFAULT_AXES = [
-    "fidelity",
-    "utility",
+    "medical_fidelity",
+    "clinical_task_utility",
     "privacy",
-    "fairness",
-    "diversity",
-    "groundedness",
-    "domain_consistency",
+    "equity",
+    "medical_diversity",
+    "clinical_groundedness",
+    "clinical_validity",
 ]
 
 

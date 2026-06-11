@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import re
 import statistics
 from collections import Counter, OrderedDict
 from itertools import combinations
@@ -11,13 +12,13 @@ from .config import load_config
 Record = dict[str, Any]
 
 AXIS_ORDER = [
-    "fidelity",
-    "utility",
+    "medical_fidelity",
+    "clinical_task_utility",
     "privacy",
-    "fairness",
-    "diversity",
-    "groundedness",
-    "domain_consistency",
+    "equity",
+    "medical_diversity",
+    "clinical_groundedness",
+    "clinical_validity",
 ]
 
 ID_COLUMNS = {
@@ -33,6 +34,9 @@ ID_COLUMNS = {
     "expected_dept",
 }
 DEFAULT_SENSITIVE_COLUMNS = ("sex", "gender", "race", "ethnicity", "age_group")
+ICD10_RE = re.compile(r"^[A-TV-Z][0-9][0-9A-Z]?(?:\.[0-9A-Z]{1,4})?$")
+VALID_ACUITY = {"routine", "elective", "urgent", "emergency"}
+VALID_LATERALITY = {"left", "right", "bilateral", "none", "midline", "unknown"}
 
 
 def evaluate(
@@ -45,13 +49,7 @@ def evaluate(
     config: str | dict[str, Any] | None = None,
     name: str | None = None,
 ) -> dict[str, Any]:
-    """Evaluate one synthetic dataset against a reference dataset.
-
-    The first five axes cover SynthEval-style public benchmark expectations:
-    fidelity, utility, privacy, fairness, and diversity. The final two axes are
-    SDE-Bench extensions for LLM/RAG-generated clinical or evidence-grounded
-    datasets: groundedness and domain consistency.
-    """
+    """Evaluate one synthetic medical dataset against a reference dataset."""
     if not real:
         raise ValueError("real must contain at least one record")
     if not synthetic:
@@ -62,13 +60,13 @@ def evaluate(
     sensitive = sensitive_columns or [c for c in DEFAULT_SENSITIVE_COLUMNS if _has_column(real + synthetic, c)]
     all_axes = OrderedDict(
         [
-            ("fidelity", _fidelity(real, synthetic)),
-            ("utility", _utility(synthetic, target)),
+            ("medical_fidelity", _fidelity(real, synthetic)),
+            ("clinical_task_utility", _utility(synthetic, target)),
             ("privacy", _privacy(real, synthetic)),
-            ("fairness", _fairness(real, synthetic, target, sensitive)),
-            ("diversity", _diversity(real, synthetic)),
-            ("groundedness", _groundedness(synthetic, source)),
-            ("domain_consistency", _domain_consistency(synthetic, source)),
+            ("equity", _fairness(real, synthetic, target, sensitive)),
+            ("medical_diversity", _diversity(real, synthetic)),
+            ("clinical_groundedness", _groundedness(synthetic, source)),
+            ("clinical_validity", _clinical_validity(synthetic, source)),
         ]
     )
     axes = OrderedDict((axis, result) for axis, result in all_axes.items() if axis in enabled_axes)
@@ -151,8 +149,9 @@ def _utility(synthetic: list[Record], target: str | None) -> dict[str, Any]:
     predicted = _first_present(synthetic, ["predicted_label", f"predicted_{target}" if target else "", "predicted_dept"])
     metrics: dict[str, Any] = {}
     if expected and predicted:
-        total = sum(1 for row in synthetic if row.get(expected) not in (None, ""))
-        correct = sum(1 for row in synthetic if row.get(expected) not in (None, "") and row.get(expected) == row.get(predicted))
+        labeled_rows = [row for row in synthetic if row.get(expected) not in (None, "") and row.get(predicted) not in (None, "")]
+        total = len(labeled_rows)
+        correct = sum(1 for row in labeled_rows if row.get(expected) == row.get(predicted))
         metrics["label_accuracy"] = correct / total if total else None
         metrics["label_support"] = total
     if target:
@@ -234,10 +233,14 @@ def _groundedness(synthetic: list[Record], source: dict[str, Record] | None) -> 
     return {"score": _mean(score_values), "metrics": metrics}
 
 
-def _domain_consistency(synthetic: list[Record], source: dict[str, Record] | None) -> dict[str, Any]:
+def _clinical_validity(synthetic: list[Record], source: dict[str, Record] | None) -> dict[str, Any]:
     metrics: dict[str, Any] = {
         "age_validity": _valid_rate(synthetic, lambda row: not isinstance(row.get("age"), int | float) or 0 <= row["age"] <= 120),
         "non_empty_diagnosis_rate": _valid_rate(synthetic, lambda row: row.get("diagnosis") not in (None, "")),
+        "icd10_format_validity": _medical_code_validity(synthetic, "icd10_codes", ICD10_RE),
+        "procedure_completeness": _field_completeness(synthetic, "procedures"),
+        "acuity_validity": _choice_validity(synthetic, "acuity", VALID_ACUITY),
+        "laterality_validity": _choice_validity(synthetic, "laterality", VALID_LATERALITY),
     }
     if source:
         source_linked = [row for row in synthetic if str(row.get("source_id")) in source]
@@ -258,6 +261,40 @@ def _domain_consistency(synthetic: list[Record], source: dict[str, Record] | Non
     return {"score": _mean(v for v in metrics.values() if isinstance(v, int | float)), "metrics": metrics}
 
 
+def _field_completeness(rows: list[Record], field: str) -> float:
+    applicable = [row for row in rows if field in row]
+    if not applicable:
+        return 1.0
+    return sum(1 for row in applicable if _split_values(row.get(field))) / len(applicable)
+
+
+def _choice_validity(rows: list[Record], field: str, valid_values: set[str]) -> float:
+    applicable = [row for row in rows if row.get(field) not in (None, "")]
+    if not applicable:
+        return 1.0
+    return sum(1 for row in applicable if str(row.get(field)).strip().lower() in valid_values) / len(applicable)
+
+
+def _medical_code_validity(rows: list[Record], field: str, pattern: re.Pattern[str]) -> float:
+    applicable = [row for row in rows if row.get(field) not in (None, "")]
+    if not applicable:
+        return 1.0
+    valid_rows = 0
+    for row in applicable:
+        codes = _split_values(row.get(field))
+        if codes and all(pattern.match(code.strip().upper()) for code in codes):
+            valid_rows += 1
+    return valid_rows / len(applicable)
+
+
+def _split_values(value: Any) -> list[str]:
+    if value in (None, ""):
+        return []
+    if isinstance(value, list | tuple | set):
+        return [str(item).strip() for item in value if str(item).strip()]
+    return [part.strip() for part in re.split(r"[,;|]", str(value)) if part.strip()]
+
+
 def _skipped(
     real: list[Record],
     synthetic: list[Record],
@@ -267,14 +304,14 @@ def _skipped(
 ) -> list[str]:
     skipped = []
     if not target:
-        skipped.append("utility.target_population_rate: provide --target")
+        skipped.append("clinical_task_utility.target_population_rate: provide --target")
     if not _first_present(synthetic, ["expected_label", f"expected_{target}" if target else "", "expected_dept"]):
-        skipped.append("utility.label_accuracy: provide expected_* and predicted_* columns")
+        skipped.append("clinical_task_utility.label_accuracy: provide expected_* and predicted_* columns")
     if not sensitive:
-        skipped.append("fairness.group_metrics: provide sensitive columns such as sex/gender/race")
+        skipped.append("equity.group_metrics: provide sensitive columns such as sex/gender/race")
     if not source:
-        skipped.append("groundedness.source_validation: provide --source for source_id validation")
-        skipped.append("domain_consistency.source_field_checks: provide --source")
+        skipped.append("clinical_groundedness.source_validation: provide --source for source_id validation")
+        skipped.append("clinical_validity.source_field_checks: provide --source")
     return skipped
 
 

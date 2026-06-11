@@ -1,14 +1,13 @@
 {
   "name": "full_eval",
   "axes": [
-    "fidelity",
-    "utility",
+    "medical_fidelity",
+    "clinical_task_utility",
     "privacy",
-    "fairness",
-    "diversity",
-    "groundedness",
-    "domain_consistency"
+    "equity",
+    "medical_diversity",
+    "clinical_groundedness",
+    "clinical_validity"
   ],
-  "description": "Run all SynthEval-style axes plus SDE-Bench groundedness and domain-consistency axes."
+  "description": "Run all SDE-Bench medical synthetic-data axes."
 }
-

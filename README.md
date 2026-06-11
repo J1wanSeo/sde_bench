@@ -1,13 +1,17 @@
 # SDE-Bench
 
-Synthetic Dataset Effectiveness Benchmark for evaluating synthetic datasets with
-standard utility/privacy criteria and two additional axes for LLM/RAG-generated,
-evidence-grounded datasets.
+Synthetic Medical Dataset Effectiveness Benchmark for evaluating synthetic
+medical datasets, including LLM/RAG-generated patient cases and synthetic EHR
+records.
 
-SDE-Bench follows the public-package expectations established by tools such as
-SynthEval: a reusable Python API, a command-line interface, preset evaluation
-profiles, single-dataset evaluation, multi-dataset benchmarking, rankable output,
-example data, tests, and JSON/Markdown reports.
+SDE-Bench keeps the reusable shape of synthetic-data benchmark tools such as
+SynthEval, but its target is medical data: clinical fidelity, downstream
+clinical-task utility, privacy, equity, medical diversity, source grounding, and
+clinical validity.
+
+The benchmark interface is universal: any hospital, institution, public
+synthetic EHR, or synthetic clinical-note dataset can be evaluated after mapping
+its native files to the common JSON/JSONL/CSV schema.
 
 ## Evaluation Axes
 
@@ -15,19 +19,21 @@ SDE-Bench reports seven axes.
 
 | Axis | Purpose | Origin |
 |---|---|---|
-| `fidelity` | Distributional and pairwise similarity to a reference dataset | SynthEval-style |
-| `utility` | Downstream label/task usefulness when expected/predicted fields exist | SynthEval-style |
+| `medical_fidelity` | Distributional and pairwise similarity to a medical reference dataset | Synthetic-data benchmark core |
+| `clinical_task_utility` | Downstream clinical label/task usefulness when expected/predicted fields exist | Synthetic-data benchmark core |
 | `privacy` | Duplicate and nearest-reference memorization risk | SynthEval-style |
-| `fairness` | Sensitive-attribute distribution and group-target parity | SynthEval-style |
-| `diversity` | Coverage, entropy, and unique-record diversity | Common synthetic-data axis |
-| `groundedness` | Source attribution and evidence support for generated claims | SDE-Bench extension |
-| `domain_consistency` | Rule/source consistency for domain fields such as department and diagnosis | SDE-Bench extension |
+| `equity` | Sensitive-attribute distribution and group-target parity | Medical fairness/equity axis |
+| `medical_diversity` | Coverage, entropy, and unique-record diversity | Synthetic-data benchmark core |
+| `clinical_groundedness` | Source attribution and evidence support for generated clinical claims | SDE-Bench medical extension |
+| `clinical_validity` | Rule/source consistency for fields such as ICD-10, procedure, acuity, laterality, department, and diagnosis | SDE-Bench medical extension |
 
-The two SDE-specific axes are `groundedness` and `domain_consistency`. They are
-intended for datasets generated from LLM + RAG pipelines, where the important
-question is not only whether records resemble a target distribution, but also
-whether generated records are traceable to evidence and internally/domain
-consistent.
+The two SDE-specific axes are `clinical_groundedness` and `clinical_validity`.
+They are intended for LLM + RAG pipelines, where the important question is not
+only whether records resemble a target distribution, but also whether generated
+records are traceable to evidence and clinically coherent.
+
+For exact formulas, see [docs/formulas.md](docs/formulas.md). For the common
+record schema, see [docs/schema.md](docs/schema.md).
 
 ## Install
 
@@ -52,6 +58,28 @@ python3 -m sde_bench evaluate \
   --sensitive sex \
   --json-out reports/example_report.json \
   --md-out reports/example_report.md
+```
+
+JSON and JSONL are first-class input formats:
+
+```bash
+python3 -m sde_bench evaluate \
+  --real exported/reference.jsonl \
+  --synthetic exported/synthetic_lay.jsonl \
+  --source exported/source.jsonl \
+  --target dept \
+  --sensitive sex
+```
+
+Dataset-specific adapters are optional convenience tools. For example, the KMUC
+patient-case adapter exports local KMUC JSONL files into the common schema:
+
+```bash
+python3 -m sde_bench kmuc-export \
+  --repo-root .. \
+  --predictions ../layer3_datasets/patient_dataset/eval/H_kurev1_real_synth_v3.json \
+  --out-dir reports/kmuc_export \
+  --format jsonl
 ```
 
 Multiple synthetic datasets:
@@ -112,8 +140,8 @@ claim. Papers should report the axis table and the task-specific metrics.
 
 ## Current Scope
 
-This is an alpha benchmark package. It is designed to be useful before a real
-holdout dataset is available, while leaving room for later TSTR/TRTR,
-membership-inference, and attribute-disclosure modules. Metrics that need those
-inputs are reported as skipped instead of silently omitted.
-
+This is an alpha medical benchmark package. It is designed to evaluate synthetic
+medical datasets before a real holdout dataset is available, while leaving room
+for later TSTR/TRTR, membership-inference, attribute-disclosure, clinical
+review, and external dataset registry modules. Metrics that need missing inputs
+are reported as skipped instead of silently omitted.

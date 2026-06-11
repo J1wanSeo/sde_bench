@@ -69,6 +69,34 @@ def load_source(path: str | Path | None) -> dict[str, Record] | None:
     return mapping
 
 
+def write_records_csv(rows: list[Record], path: str | Path) -> None:
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = sorted({key for row in rows for key in row})
+    with target.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def write_records(rows: list[Record], path: str | Path) -> None:
+    target = Path(path)
+    suffix = target.suffix.lower()
+    if suffix == ".csv":
+        write_records_csv(rows, target)
+        return
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if suffix == ".jsonl":
+        with target.open("w", encoding="utf-8") as handle:
+            for row in rows:
+                handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+        return
+    if suffix == ".json":
+        target.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+        return
+    raise ValueError(f"Unsupported output record format: {target}")
+
+
 def write_json(report: dict[str, Any], path: str | Path) -> None:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)

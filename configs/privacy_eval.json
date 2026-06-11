@@ -2,7 +2,7 @@
   "name": "privacy_eval",
   "axes": [
     "privacy",
-    "groundedness"
+    "clinical_groundedness"
   ],
   "description": "Focus on memorization, duplicate, nearest-reference, and source-attribution checks."
 }

@@ -16,14 +16,13 @@ Rules:
 1. Keep support counts in `metrics`, but do not include them in axis scores.
 2. Emit skipped metrics when required inputs are unavailable.
 3. Prefer raw metric reporting over a single summary claim.
-4. Keep domain-specific metrics optional unless they are part of the two
-   SDE-Bench extension axes.
+4. Keep specialty-specific metrics optional unless they are part of
+   `clinical_groundedness` or `clinical_validity`.
 
 Planned modules:
 
-- TSTR/TRTR task utility
+- TSTR/TRTR clinical task utility
 - membership inference risk
 - attribute disclosure risk
 - semantic evidence support via embeddings or judge models
 - clinical rule packs by specialty
-
