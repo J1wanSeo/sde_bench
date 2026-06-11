@@ -49,6 +49,24 @@
         "categorical_columns": 18
       }
     },
+    "clinical_scope_generalizability": {
+      "score": 0.8156155903007395,
+      "metrics": {
+        "department_scope": 0.0,
+        "department_unique": 0,
+        "diagnosis_scope": 1.0,
+        "diagnosis_unique": 568,
+        "procedure_scope": 1.0,
+        "procedure_unique": 3190,
+        "demographic_scope": 0.8936935418044363,
+        "age_group_unique": 4,
+        "sex_or_gender_unique": 2,
+        "scenario_scope": 1.0,
+        "scenario_unique": 11,
+        "task_scope": 1.0,
+        "task_signal_unique": 4
+      }
+    },
     "clinical_groundedness": {
       "score": 1.0,
       "metrics": {
@@ -80,7 +98,7 @@
       }
     }
   },
-  "overall_score": 0.8817081796385942,
+  "overall_score": 0.8743645586010547,
   "skipped": [],
   "name": "synthetic"
 }

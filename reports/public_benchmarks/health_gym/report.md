@@ -1,7 +1,7 @@
 # SDE-Bench Report
 
 - dataset: `synthetic`
-- overall_score: `0.9337`
+- overall_score: `0.8550`
 
 | Axis | Score | Key metrics |
 |---|---:|---|
@@ -10,6 +10,7 @@
 | privacy | 0.5929 | exact_duplicate_rate=0.0000, median_distance_to_reference=0.1858, records_compared=267480, distance_synthetic_records=1000, distance_reference_records=1000, distance_sampled=True |
 | equity | 0.9987 | sensitive_columns=sex,ethnicity, sensitive_distribution_similarity=0.9974, group_target_parity=1.0000 |
 | medical_diversity | 0.9660 | category_coverage=0.9000, entropy_ratio=0.9980, unique_record_ratio=1.0000, categorical_columns=20 |
+| clinical_scope_generalizability | 0.2253 | department_scope=0.0000, department_unique=0, diagnosis_scope=0.0833, diagnosis_unique=1, procedure_scope=0.0000, procedure_unique=0, demographic_scope=0.3934, age_group_unique=0, sex_or_gender_unique=2, scenario_scope=0.0000, scenario_unique=0, task_scope=0.8750, task_signal_unique=3 |
 | clinical_groundedness | 1.0000 | source_attribution_rate=1.0000, evidence_support_score=1.0000, evidence_support_n=267480 |
-| clinical_validity | 1.0000 | age_validity=1.0000, non_empty_diagnosis_rate=1.0000, icd10_format_validity=1.0000, procedure_completeness=1.0000, acuity_validity=1.0000, laterality_validity=1.0000, diagnosis_source_overlap=1.0000 |
+| clinical_validity | 1.0000 | age_validity=1.0000, non_empty_diagnosis_rate=1.0000, procedure_completeness=1.0000, acuity_validity=1.0000, laterality_validity=1.0000, diagnosis_source_overlap=1.0000 |
 | medical_interoperability | 0.9583 | omop_domain_coverage=0.8333, standard_vocabulary_rate=1.0000, temporal_traceability=1.0000, relational_integrity=1.0000 |

@@ -6,8 +6,8 @@ records.
 
 SDE-Bench keeps the reusable shape of synthetic-data benchmark tools such as
 SynthEval, but its target is medical data: clinical fidelity, downstream
-clinical-task utility, privacy, equity, medical diversity, source grounding, and
-clinical validity.
+clinical-task utility, privacy, equity, medical diversity, clinical scope,
+source grounding, and clinical validity.
 
 The benchmark interface is universal: any hospital, institution, public
 synthetic EHR, or synthetic clinical-note dataset can be evaluated after mapping
@@ -15,7 +15,7 @@ its native files to the common JSON/JSONL/CSV schema.
 
 ## Evaluation Axes
 
-SDE-Bench reports eight axes.
+SDE-Bench reports nine axes.
 
 | Axis | Purpose | Origin |
 |---|---|---|
@@ -24,16 +24,18 @@ SDE-Bench reports eight axes.
 | `privacy` | Duplicate and nearest-reference memorization risk | SynthEval-style |
 | `equity` | Sensitive-attribute distribution and group-target parity | Medical fairness/equity axis |
 | `medical_diversity` | Coverage, entropy, and unique-record diversity | Synthetic-data benchmark core |
+| `clinical_scope_generalizability` | Breadth across departments, diagnosis groups, procedures, demographics, scenarios, and task signals | SDE-Bench medical extension |
 | `clinical_groundedness` | Source attribution and evidence support for generated clinical claims | SDE-Bench medical extension |
 | `clinical_validity` | Rule/source consistency for fields such as ICD-10, procedure, acuity, laterality, department, and diagnosis | SDE-Bench medical extension |
 | `medical_interoperability` | OMOP/FHIR-style structural readiness when longitudinal EHR fields are present | SDE-Bench medical extension |
 
-The SDE-specific axes are `clinical_groundedness`, `clinical_validity`, and
-`medical_interoperability`. They are intended for LLM + RAG pipelines and
-medical synthetic EHRs, where the important question is not only whether records
-resemble a target distribution, but also whether generated records are traceable
-to evidence, clinically coherent, and mappable to standard data models when the
-native dataset supports that claim.
+The SDE-specific axes are `clinical_scope_generalizability`,
+`clinical_groundedness`, `clinical_validity`, and `medical_interoperability`.
+They are intended for LLM + RAG pipelines and medical synthetic EHRs, where the
+important question is not only whether records resemble a target distribution,
+but also whether generated records cover a reusable clinical scope, are
+traceable to evidence, clinically coherent, and mappable to standard data models
+when the native dataset supports that claim.
 
 For exact formulas, see [docs/formulas.md](docs/formulas.md). For the common
 record schema, see [docs/schema.md](docs/schema.md).
@@ -135,8 +137,15 @@ python3 -m sde_bench benchmark \
 Original-paper benchmark matrix:
 
 ```bash
+python3 -m sde_bench original-metric \
+  --family kmuc_matching \
+  --input ../layer3_datasets/patient_dataset/eval/H_kurev1_real_synth_v3.json \
+  --json-out reports/kmuc_original_metric_report.json \
+  --md-out reports/kmuc_original_metric_report.md
+
 python3 -m sde_bench cross-benchmark \
   --sde-report KMUC=reports/kmuc_sde_report.json \
+  --original-report KMUC=reports/kmuc_original_metric_report.json \
   --sde-report MedSynth=reports/public_benchmarks/medsynth/report.json \
   --sde-report SimSUM=reports/public_benchmarks/simsum/report.json \
   --sde-report Synthea=reports/public_benchmarks/synthea/report.json \

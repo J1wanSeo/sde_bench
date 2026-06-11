@@ -101,7 +101,41 @@ medical_diversity = mean(category_coverage, entropy_ratio, unique_record_ratio)
 Interpretation: high score means the synthetic set covers the reference support
 without collapsing to repeated records.
 
-## 6. Clinical Groundedness
+## 6. Clinical Scope Generalizability
+
+For a set of values `V` and a target breadth cap `K`:
+
+```text
+unique_scope(V, K) = min(count(unique(V)) / K, 1)
+entropy_scope(V, K) = H(V) / log2(min(K, count(unique(V))))
+absolute_scope(V, K) = mean(unique_scope(V, K), entropy_scope(V, K))
+```
+
+SDE-Bench computes:
+
+```text
+department_scope = absolute_scope(dept or specialty labels, 8)
+diagnosis_scope = absolute_scope(diagnosis_group or ICD chapter/group labels, 12)
+procedure_scope = absolute_scope(procedure labels, 8)
+demographic_scope = mean(absolute_scope(age bins, 5),
+                         absolute_scope(sex/gender labels, 2))
+scenario_scope = absolute_scope(acuity, tone, setting, visit type,
+                                scenario, or chronic-condition signals, 6)
+task_scope = absolute_scope(available task signals, 4)
+clinical_scope_generalizability = mean(department_scope,
+                                       diagnosis_scope,
+                                       procedure_scope,
+                                       demographic_scope,
+                                       scenario_scope,
+                                       task_scope)
+```
+
+Interpretation: high score means the synthetic dataset is broad across clinical
+departments, diagnoses, procedures, demographics, scenarios, and reusable task
+signals. This is different from `medical_diversity`: a narrow HIV longitudinal
+dataset can be internally diverse while still scoring low on clinical scope.
+
+## 7. Clinical Groundedness
 
 ```text
 source_attribution_rate = count(source_id present and valid) / count(S)
@@ -113,7 +147,7 @@ Interpretation: high score means generated claims are traceable to source
 records and lexically supported by evidence. Current support is token-based; a
 semantic evidence checker is a planned extension.
 
-## 7. Clinical Validity
+## 8. Clinical Validity
 
 ```text
 age_validity = count(0 <= age <= 120) / count(S)
@@ -132,7 +166,7 @@ Interpretation: high score means basic medical fields are structurally coherent
 and source-consistent. Specialty-specific clinical rule packs should be added for
 stronger claims.
 
-## 8. Medical Interoperability
+## 9. Medical Interoperability
 
 Let `D_core = {person, visit_occurrence, condition_occurrence,
 procedure_occurrence, drug_exposure, measurement}`.

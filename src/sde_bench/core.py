@@ -17,6 +17,7 @@ AXIS_ORDER = [
     "privacy",
     "equity",
     "medical_diversity",
+    "clinical_scope_generalizability",
     "clinical_groundedness",
     "clinical_validity",
     "medical_interoperability",
@@ -98,6 +99,7 @@ def evaluate(
             ("privacy", _privacy(real, synthetic, sample_size=eval_config.get("privacy_distance_sample_size"))),
             ("equity", _fairness(real, synthetic, target, sensitive)),
             ("medical_diversity", _diversity(real, synthetic)),
+            ("clinical_scope_generalizability", _scope_generalizability(synthetic)),
             ("clinical_groundedness", _groundedness(synthetic, source)),
             ("clinical_validity", _clinical_validity(synthetic, source)),
             ("medical_interoperability", _medical_interoperability(synthetic)),
@@ -255,6 +257,45 @@ def _diversity(real: list[Record], synthetic: list[Record]) -> dict[str, Any]:
     return {"score": _mean(score_values), "metrics": metrics}
 
 
+def _scope_generalizability(synthetic: list[Record]) -> dict[str, Any]:
+    departments = _scope_values(synthetic, ["dept", "expected_dept", "department", "specialty"])
+    diagnoses = _diagnosis_scope_values(synthetic)
+    procedures = _scope_values(synthetic, ["procedures", "procedure", "procedure_group"])
+    age_bins = [_age_bin(row.get("age")) for row in synthetic if _age_bin(row.get("age"))]
+    sexes = _scope_values(synthetic, ["sex", "gender"])
+    scenarios = _scope_values(synthetic, ["acuity", "tone", "scenario", "setting", "visit_type", "chronic_conditions"])
+    task_signals = _task_signal_values(synthetic)
+
+    demographic_components = [
+        _absolute_scope_score(age_bins, target_unique=5),
+        _absolute_scope_score(sexes, target_unique=2),
+    ]
+    metrics = {
+        "department_scope": _absolute_scope_score(departments, target_unique=8),
+        "department_unique": len(set(departments)),
+        "diagnosis_scope": _absolute_scope_score(diagnoses, target_unique=12),
+        "diagnosis_unique": len(set(diagnoses)),
+        "procedure_scope": _absolute_scope_score(procedures, target_unique=8),
+        "procedure_unique": len(set(procedures)),
+        "demographic_scope": _mean(demographic_components),
+        "age_group_unique": len(set(age_bins)),
+        "sex_or_gender_unique": len(set(sexes)),
+        "scenario_scope": _absolute_scope_score(scenarios, target_unique=6),
+        "scenario_unique": len(set(scenarios)),
+        "task_scope": _absolute_scope_score(task_signals, target_unique=4),
+        "task_signal_unique": len(set(task_signals)),
+    }
+    score_values = [
+        metrics["department_scope"],
+        metrics["diagnosis_scope"],
+        metrics["procedure_scope"],
+        metrics["demographic_scope"],
+        metrics["scenario_scope"],
+        metrics["task_scope"],
+    ]
+    return {"score": _mean(score_values), "metrics": metrics}
+
+
 def _groundedness(synthetic: list[Record], source: dict[str, Record] | None) -> dict[str, Any]:
     with_source = [row for row in synthetic if row.get("source_id") not in (None, "")]
     if source:
@@ -359,6 +400,72 @@ def _standard_vocabulary_rate(rows: list[Record]) -> float | None:
         if values and all(value.upper() in STANDARD_VOCABULARIES for value in values):
             valid += 1
     return valid / len(rows)
+
+
+def _scope_values(rows: list[Record], fields: list[str]) -> list[str]:
+    values = []
+    for row in rows:
+        for field in fields:
+            if row.get(field) not in (None, ""):
+                values.extend(_split_values(row.get(field)))
+    return [value.strip() for value in values if value.strip()]
+
+
+def _diagnosis_scope_values(rows: list[Record]) -> list[str]:
+    values = _scope_values(rows, ["diagnosis_group"])
+    if values:
+        return values
+    icd_values = _scope_values(rows, ["icd10_codes", "icd9_codes"])
+    groups = []
+    for code in icd_values:
+        normalized = code.strip().upper().replace(".", "")
+        if not normalized:
+            continue
+        if normalized[0].isalpha():
+            groups.append(normalized[0])
+        elif normalized[0].isdigit():
+            groups.append(normalized[:3])
+    if groups:
+        return groups
+    return _scope_values(rows, ["diagnosis", "condition", "problem"])
+
+
+def _task_signal_values(rows: list[Record]) -> list[str]:
+    signals = []
+    for field, label in (
+        ("expected_dept", "department_retrieval"),
+        ("predicted_dept", "department_prediction"),
+        ("expected_diagnosis_group", "diagnosis_prediction"),
+        ("claim", "patient_text"),
+        ("evidence", "source_evidence"),
+        ("procedures", "procedure_label"),
+    ):
+        if any(row.get(field) not in (None, "") for row in rows):
+            signals.append(label)
+    return signals
+
+
+def _absolute_scope_score(values: list[Any], *, target_unique: int) -> float:
+    cleaned = [str(value) for value in values if value not in (None, "")]
+    if not cleaned:
+        return 0.0
+    unique_score = min(len(set(cleaned)) / target_unique, 1.0)
+    entropy_score = _entropy(cleaned) / math.log2(min(target_unique, len(set(cleaned)))) if len(set(cleaned)) > 1 else unique_score
+    return _mean([unique_score, entropy_score])
+
+
+def _age_bin(value: Any) -> str:
+    if not isinstance(value, int | float) or isinstance(value, bool):
+        return ""
+    if value < 18:
+        return "pediatric"
+    if value < 40:
+        return "young_adult"
+    if value < 65:
+        return "middle_adult"
+    if value < 80:
+        return "older_adult"
+    return "oldest_adult"
 
 
 def _field_completeness(rows: list[Record], field: str) -> float:

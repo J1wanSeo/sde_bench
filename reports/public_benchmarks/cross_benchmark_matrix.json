@@ -43,7 +43,8 @@
       "KMUC": {
         "status": "computed",
         "value": "`dept_top1=0.7467`, `dept_hit@5=0.8800`, `mrr_dept=0.7943`, `proc_coverage@5=0.5889`, `icd_coverage@5=0.5931`",
-        "why": "KMUC was designed for this retrieval/matching task."
+        "why": "KMUC was designed for this retrieval/matching task.",
+        "source_report": "../layer3_datasets/patient_dataset/eval/H_kurev1_real_synth_v3.json"
       },
       "MedSynth": {
         "status": "not_applicable",
@@ -150,67 +151,73 @@
   },
   "stage_b_sde": {
     "KMUC": {
-      "overall": 0.8091972103490085,
+      "overall": 0.8301779741583407,
       "medical_fidelity": 1.0,
       "clinical_task_utility": 0.8733333333333333,
       "privacy": 0.5,
       "equity": 0.8474370304904993,
       "medical_diversity": 1.0,
+      "clinical_scope_generalizability": 0.9770433208236664,
       "clinical_groundedness": 0.5027767752858937,
       "clinical_validity": 0.9408333333333333,
       "medical_interoperability": null
     },
     "MedSynth": {
-      "overall": 0.744591287071673,
+      "overall": 0.6955833003406262,
       "medical_fidelity": 0.22887664480031045,
       "clinical_task_utility": 1.0,
-      "privacy": 0.7060807291666666,
+      "privacy": 0.724945977393617,
       "equity": null,
       "medical_diversity": 0.7198019873040828,
+      "clinical_scope_generalizability": 0.3826701317273949,
       "clinical_groundedness": 0.8127883611589785,
       "clinical_validity": 1.0,
       "medical_interoperability": null
     },
     "SimSUM": {
-      "overall": 0.7843130319068088,
+      "overall": 0.7020645621416522,
       "medical_fidelity": 0.9530926991870482,
       "clinical_task_utility": 1.0,
       "privacy": 0.134,
       "equity": null,
       "medical_diversity": 0.7648129808134755,
+      "clinical_scope_generalizability": 0.20857374355071315,
       "clinical_groundedness": 0.8539725114403292,
       "clinical_validity": 1.0,
       "medical_interoperability": null
     },
     "Synthea": {
-      "overall": 0.8225684529772123,
+      "overall": 0.8050460741172659,
       "medical_fidelity": 0.3032552769353153,
       "clinical_task_utility": 0.9897610921501706,
       "privacy": 0.7520974099099099,
       "equity": 0.7253629739821494,
       "medical_diversity": 0.8122649225222588,
+      "clinical_scope_generalizability": 0.6652327185180466,
       "clinical_groundedness": 1.0,
-      "clinical_validity": 0.9978059483178937,
+      "clinical_validity": 0.9974402730375426,
       "medical_interoperability": 1.0
     },
     "HealthGymART": {
-      "overall": 0.9336967390103876,
+      "overall": 0.8549842657896058,
       "medical_fidelity": 0.9536583509581491,
       "clinical_task_utility": 1.0,
       "privacy": 0.5928868231854607,
       "equity": 0.998710183938986,
       "medical_diversity": 0.9659852206671716,
+      "clinical_scope_generalizability": 0.2252844800233509,
       "clinical_groundedness": 1.0,
       "clinical_validity": 1.0,
       "medical_interoperability": 0.9583333333333334
     },
     "DeSynPUF": {
-      "overall": 0.8817081796385942,
+      "overall": 0.8743645586010547,
       "medical_fidelity": 0.5969448613883596,
       "clinical_task_utility": 0.9991913020037739,
       "privacy": 0.7537736547095412,
       "equity": 0.9200643840609725,
       "medical_diversity": 0.9278790924954515,
+      "clinical_scope_generalizability": 0.8156155903007395,
       "clinical_groundedness": 1.0,
       "clinical_validity": 0.9393476502830442,
       "medical_interoperability": 0.9164644921676102

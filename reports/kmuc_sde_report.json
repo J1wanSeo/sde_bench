@@ -28,7 +28,10 @@
       "metrics": {
         "exact_duplicate_rate": 0.0,
         "median_distance_to_reference": 0.0,
-        "records_compared": 750
+        "records_compared": 750,
+        "distance_synthetic_records": 750,
+        "distance_reference_records": 150,
+        "distance_sampled": false
       }
     },
     "equity": {
@@ -48,6 +51,24 @@
         "categorical_columns": 7
       }
     },
+    "clinical_scope_generalizability": {
+      "score": 0.9770433208236664,
+      "metrics": {
+        "department_scope": 1.0,
+        "department_unique": 15,
+        "diagnosis_scope": 0.979825353419532,
+        "diagnosis_unique": 20,
+        "procedure_scope": 1.0,
+        "procedure_unique": 73,
+        "demographic_scope": 0.9218706233043445,
+        "age_group_unique": 5,
+        "sex_or_gender_unique": 2,
+        "scenario_scope": 0.9605639482181221,
+        "scenario_unique": 8,
+        "task_scope": 1.0,
+        "task_signal_unique": 5
+      }
+    },
     "clinical_groundedness": {
       "score": 0.5027767752858937,
       "metrics": {
@@ -62,6 +83,7 @@
         "age_validity": 1.0,
         "non_empty_diagnosis_rate": 1.0,
         "icd10_format_validity": 1.0,
+        "icd9_format_validity": null,
         "procedure_completeness": 0.5266666666666666,
         "acuity_validity": 1.0,
         "laterality_validity": 1.0,
@@ -76,7 +98,7 @@
       }
     }
   },
-  "overall_score": 0.8091972103490085,
+  "overall_score": 0.8301779741583407,
   "skipped": [
     "medical_interoperability: provide OMOP/FHIR/CSV-derived interoperability fields"
   ],

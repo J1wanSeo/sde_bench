@@ -22,6 +22,7 @@ synthetic medical datasets.
 | SimSUM | Simulated respiratory structured + note records | https://github.com/prabaey/SimSUM | 1,000 reference records, 1,000 compact-note synthetic records sampled from first 2,000 rows |
 | Synthea sample CSV | Synthetic longitudinal EHR generator sample | https://synthetichealth.github.io/synthea/ | 585 reference patients, 586 synthetic patients from the official April 2020 CSV sample |
 | Health Gym ART for HIV | Synthetic longitudinal ART/HIV monthly records | https://doi.org/10.6084/m9.figshare.22827878.v1 | 267,480 reference records and 267,480 synthetic monthly records from a patient split |
+| CMS DE-SynPUF inpatient claims | Synthetic Medicare claims | https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files | 33,386 reference claims and 33,387 synthetic claims from CMS Sample 1 inpatient split |
 
 ## Original Paper Metrics
 
@@ -32,16 +33,18 @@ synthetic medical datasets.
 | SimSUM | Symptom extraction F1 over synthetic respiratory records | Latest arXiv v4 Table 4 neural-text F1, normal: dyspnea `0.9617`, cough `0.9603`, pain `0.8143`, nasal `0.9628`, fever `0.9096`. Compact: dyspnea `0.9444`, cough `0.9397`, pain `0.7940`, nasal `0.9622`, fever `0.9010`. |
 | Synthea sample CSV | Public generator/sample release in FHIR, C-CDA, and CSV formats | The official sample page reports availability of over a thousand sample patients across export formats, but does not attach a single dataset-paper numeric quality metric to this CSV bundle. |
 | Health Gym ART for HIV | Longitudinal synthetic ART data generated with WGAN-GP+VAE+Buffer and used for health data education/analytics | Figshare metadata reports `534,960` records, `8,916` synthetic patients, `60` monthly time points, and `15` columns. SDE-Bench evaluates the full patient split; nearest-reference privacy distance uses deterministic `1000x1000` sampling. |
+| CMS DE-SynPUF inpatient claims | CMS synthetic public use claims files | CMS releases synthetic Medicare beneficiary and claims tables for public analysis; this run evaluates Sample 1 beneficiary plus inpatient claims only. |
 
 ## SDE-Bench Results
 
-| Dataset | Overall | Medical Fidelity | Clinical Task Utility | Privacy | Equity | Medical Diversity | Clinical Groundedness | Clinical Validity | Medical Interoperability |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| KMUC synthetic lay cases | `0.8092` | `1.0000` | `0.8733` | `0.5000` | `0.8474` | `1.0000` | `0.5028` | `0.9408` | `n/a**` |
-| MedSynth | `0.7446` | `0.2289` | `1.0000` | `0.7061` | `n/a*` | `0.7198` | `0.8128` | `1.0000` | `n/a**` |
-| SimSUM sampled compact notes | `0.7843` | `0.9531` | `1.0000` | `0.1340` | `n/a*` | `0.7648` | `0.8540` | `1.0000` | `n/a**` |
-| Synthea sample CSV | `0.8226` | `0.3033` | `0.9898` | `0.7521` | `0.7254` | `0.8123` | `1.0000` | `0.9978` | `1.0000` |
-| Health Gym ART for HIV | `0.9337` | `0.9537` | `1.0000` | `0.5929` | `0.9987` | `0.9660` | `1.0000` | `1.0000` | `0.9583` |
+| Dataset | Overall | Fidelity | Utility | Privacy | Equity | Diversity | Scope | Groundedness | Validity | Interoperability |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| KMUC synthetic lay cases | `0.8302` | `1.0000` | `0.8733` | `0.5000` | `0.8474` | `1.0000` | `0.9770` | `0.5028` | `0.9408` | `n/a**` |
+| MedSynth | `0.6956` | `0.2289` | `1.0000` | `0.7249` | `n/a*` | `0.7198` | `0.3827` | `0.8128` | `1.0000` | `n/a**` |
+| SimSUM sampled compact notes | `0.7021` | `0.9531` | `1.0000` | `0.1340` | `n/a*` | `0.7648` | `0.2086` | `0.8540` | `1.0000` | `n/a**` |
+| Synthea sample CSV | `0.8050` | `0.3033` | `0.9898` | `0.7521` | `0.7254` | `0.8123` | `0.6652` | `1.0000` | `0.9974` | `1.0000` |
+| Health Gym ART for HIV | `0.8550` | `0.9537` | `1.0000` | `0.5929` | `0.9987` | `0.9660` | `0.2253` | `1.0000` | `1.0000` | `0.9583` |
+| CMS DE-SynPUF inpatient claims | `0.8744` | `0.5969` | `0.9992` | `0.7538` | `0.9201` | `0.9279` | `0.8156` | `1.0000` | `0.9393` | `0.9165` |
 
 `*` Equity is skipped/no-sensitive-columns for MedSynth and SimSUM, so the
 axis is excluded from the overall score. It should not be interpreted as
@@ -70,9 +73,9 @@ score rather than penalizing unstructured text datasets.
    split of one generated sample, not a real-vs-synthetic training holdout.
 5. Health Gym ART shows strong longitudinal structured-data scores in the full
    patient split, especially fidelity, equity, diversity, groundedness,
-   validity, and interoperability. Its privacy score uses the reported
-   deterministic nearest-distance sample while exact duplicate rate is computed
-   across all 267,480 synthetic records.
+   validity, and interoperability. Its low `clinical_scope_generalizability`
+   reflects that it is mainly an HIV/ART dataset, not a broad multi-specialty
+   synthetic medical dataset.
 6. KMUC's weakest current SDE-Bench axis is lexical `clinical_groundedness`
    because Korean lay descriptions are compared against abbreviated mixed
    Korean/English EMR notes with token overlap. This should be upgraded with a

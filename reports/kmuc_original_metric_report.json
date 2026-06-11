@@ -1,0 +1,31 @@
+{
+  "schema_version": "0.1.0",
+  "benchmark_family": "kmuc_matching",
+  "status": "computed",
+  "run_tag": "H_kurev1_real_synth_v3",
+  "model": "nlpai-lab/KURE-v1",
+  "cases": 150,
+  "doctors": 212,
+  "top_k": 5,
+  "records": 150,
+  "metrics": {
+    "dept_top1": 0.7467,
+    "dept_hit@5": 0.88,
+    "mrr_dept": 0.7943,
+    "proc_coverage@5": 0.5889,
+    "proc_coverage_n": 90,
+    "icd_coverage@5": 0.5931,
+    "icd_coverage_n": 120
+  },
+  "metric_provenance": {
+    "dept_top1": "reported_by_input_summary",
+    "dept_hit@5": "reported_by_input_summary",
+    "mrr_dept": "reported_by_input_summary",
+    "proc_coverage@5": "reported_by_input_summary",
+    "proc_coverage_n": "reported_by_input_summary",
+    "icd_coverage@5": "reported_by_input_summary",
+    "icd_coverage_n": "reported_by_input_summary"
+  },
+  "skipped_metrics": [],
+  "source_report": "../layer3_datasets/patient_dataset/eval/H_kurev1_real_synth_v3.json"
+}

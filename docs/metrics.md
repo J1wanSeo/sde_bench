@@ -1,6 +1,6 @@
 # Metrics
 
-SDE-Bench reports an eight-axis medical synthetic-data profile. Each axis exposes
+SDE-Bench reports a nine-axis medical synthetic-data profile. Each axis exposes
 raw metrics and a bounded `score` in `[0, 1]`. The score is intended for quick
 comparison; papers should report the raw metrics as well.
 
@@ -53,11 +53,32 @@ Measures whether sensitive group distributions are preserved.
 ### Medical Diversity
 
 Measures whether synthetic records cover the reference support and avoid
-degenerate repetition.
+degenerate repetition. This is an internal distribution-quality axis, not a
+medical breadth or generalizability axis.
 
 - `category_coverage`: coverage of reference categorical values.
 - `entropy_ratio`: synthetic/reference entropy ratio.
 - `unique_record_ratio`: fraction of unique synthetic record fingerprints.
+
+### Clinical Scope Generalizability
+
+Measures whether a dataset spans a broad and reusable medical scope rather than
+only being internally diverse within a narrow disease or workflow.
+
+- `department_scope`: absolute breadth and entropy of department, specialty, or
+  expected department labels.
+- `diagnosis_scope`: breadth and entropy of diagnosis groups, ICD chapters, or
+  diagnosis labels.
+- `procedure_scope`: breadth and entropy of procedure groups or procedure
+  labels.
+- `demographic_scope`: combined age-bin and sex/gender breadth.
+- `scenario_scope`: breadth of acuity, tone, setting, visit type, scenario, or
+  chronic-condition signals.
+- `task_scope`: count of portable task signals such as department retrieval,
+  diagnosis labels, patient text, source evidence, and procedure labels.
+
+This axis intentionally separates a narrow but well-formed longitudinal dataset
+from a broadly reusable multi-specialty synthetic clinical dataset.
 
 ### Clinical Groundedness
 

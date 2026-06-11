@@ -14,6 +14,7 @@ from .adapters.synsum import export_synsum_records
 from .core import benchmark, evaluate
 from .domain_datasets import build_domain_survey, markdown_domain_survey
 from .io import load_records, load_source, write_json, write_markdown, write_records
+from .original_metrics import evaluate_kmuc_matching_original, markdown_original_metric_report
 from .original_benchmarks import build_cross_benchmark_report, markdown_cross_benchmark
 
 
@@ -98,8 +99,20 @@ def main(argv: list[str] | None = None) -> int:
         default=[],
         help="dataset=report.json entry; may be repeated",
     )
+    cross_parser.add_argument(
+        "--original-report",
+        action="append",
+        default=[],
+        help="dataset=original_metric_report.json entry; may be repeated",
+    )
     cross_parser.add_argument("--json-out", type=Path, default=None)
     cross_parser.add_argument("--md-out", type=Path, default=None)
+
+    original_parser = sub.add_parser("original-metric", help="compute an original-paper benchmark metric report")
+    original_parser.add_argument("--family", required=True, choices=["kmuc_matching"])
+    original_parser.add_argument("--input", required=True, type=Path)
+    original_parser.add_argument("--json-out", type=Path, default=None)
+    original_parser.add_argument("--md-out", type=Path, default=None)
 
     survey_parser = sub.add_parser("dataset-survey", help="build a public synthetic dataset survey")
     survey_parser.add_argument("--json-out", type=Path, default=None)
@@ -213,12 +226,30 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "cross-benchmark":
         sde_reports = _load_named_reports(args.sde_report)
-        report = build_cross_benchmark_report(sde_reports)
+        original_reports = _load_named_reports(args.original_report)
+        report = build_cross_benchmark_report(sde_reports, original_reports=original_reports)
         if args.json_out:
             write_json(report, args.json_out)
         if args.md_out:
             args.md_out.parent.mkdir(parents=True, exist_ok=True)
             args.md_out.write_text(markdown_cross_benchmark(report), encoding="utf-8")
+        if not args.json_out and not args.md_out:
+            from json import dumps
+
+            print(dumps(report, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.command == "original-metric":
+        data = json.loads(args.input.read_text(encoding="utf-8"))
+        if args.family == "kmuc_matching":
+            report = evaluate_kmuc_matching_original(data, source_report=str(args.input))
+        else:
+            raise ValueError(f"Unsupported original metric family: {args.family}")
+        if args.json_out:
+            write_json(report, args.json_out)
+        if args.md_out:
+            args.md_out.parent.mkdir(parents=True, exist_ok=True)
+            args.md_out.write_text(markdown_original_metric_report(report), encoding="utf-8")
         if not args.json_out and not args.md_out:
             from json import dumps
 

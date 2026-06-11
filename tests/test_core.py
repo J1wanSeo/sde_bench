@@ -17,6 +17,7 @@ from sde_bench.adapters.medsynth import export_medsynth_records
 from sde_bench.adapters.synthea import export_synthea_records
 from sde_bench.adapters.synsum import export_synsum_records
 from sde_bench.domain_datasets import build_domain_survey, markdown_domain_survey
+from sde_bench.original_metrics import evaluate_kmuc_matching_original, markdown_original_metric_report
 from sde_bench.original_benchmarks import build_cross_benchmark_report, markdown_cross_benchmark
 
 
@@ -136,6 +137,7 @@ class SdeBenchCoreTests(unittest.TestCase):
                 "privacy",
                 "equity",
                 "medical_diversity",
+                "clinical_scope_generalizability",
                 "clinical_groundedness",
                 "clinical_validity",
                 "medical_interoperability",
@@ -146,6 +148,57 @@ class SdeBenchCoreTests(unittest.TestCase):
         self.assertAlmostEqual(report["axes"]["clinical_validity"]["metrics"]["dept_consistency"], 1.0)
         self.assertAlmostEqual(report["axes"]["clinical_task_utility"]["metrics"]["label_accuracy"], 2 / 3)
         self.assertLess(report["axes"]["clinical_task_utility"]["score"], 1.0)
+
+    def test_scope_generalizability_separates_broad_medical_scope_from_internal_diversity(self) -> None:
+        broad = []
+        for index, (dept, diagnosis_group, procedure, age, sex, acuity) in enumerate(
+            [
+                ("OS", "S", "ORIF", 72, "M", "urgent"),
+                ("GI", "K", "EGD", 45, "F", "routine"),
+                ("NS", "M", "laminectomy", 62, "F", "elective"),
+                ("CRS", "C", "colectomy", 55, "M", "emergency"),
+                ("HO", "D", "chemotherapy", 34, "F", "routine"),
+                ("CV", "I", "PCI", 78, "M", "urgent"),
+            ]
+        ):
+            broad.append(
+                {
+                    "case_id": f"B{index}",
+                    "dept": dept,
+                    "diagnosis_group": diagnosis_group,
+                    "procedures": procedure,
+                    "age": age,
+                    "sex": sex,
+                    "acuity": acuity,
+                    "expected_dept": dept,
+                    "claim": f"{dept} patient",
+                    "evidence": f"{dept} patient",
+                }
+            )
+        narrow = [
+            {
+                "case_id": f"N{index}",
+                "dept": "ID",
+                "diagnosis_group": "B20",
+                "procedures": "ART",
+                "age": 42 + index,
+                "sex": "F",
+                "acuity": "routine",
+                "claim": "HIV ART monthly record",
+                "evidence": "HIV ART monthly record",
+            }
+            for index in range(6)
+        ]
+
+        broad_report = evaluate(real=broad, synthetic=broad, target="dept")
+        narrow_report = evaluate(real=narrow, synthetic=narrow, target="diagnosis_group")
+
+        broad_scope = broad_report["axes"]["clinical_scope_generalizability"]
+        narrow_scope = narrow_report["axes"]["clinical_scope_generalizability"]
+        self.assertGreater(broad_scope["score"], narrow_scope["score"])
+        self.assertGreater(broad_scope["metrics"]["department_scope"], narrow_scope["metrics"]["department_scope"])
+        self.assertEqual(narrow_scope["metrics"]["department_unique"], 1)
+        self.assertIn("clinical_scope_generalizability", broad_report["axes"])
 
     def test_clinical_validity_includes_medical_validity_metrics(self) -> None:
         report = evaluate(
@@ -609,6 +662,78 @@ class SdeBenchCoreTests(unittest.TestCase):
 
 
 class SdeBenchCliTests(unittest.TestCase):
+    def test_kmuc_matching_original_metric_recomputes_topk_and_preserves_reported_coverage(self) -> None:
+        report = evaluate_kmuc_matching_original(
+            {
+                "cases": 2,
+                "doctors": 5,
+                "run_tag": "unit_run",
+                "model": "KURE-v1",
+                "top_k": 3,
+                "proc_coverage@5": 0.5,
+                "proc_coverage_n": 2,
+                "icd_coverage@5": 0.25,
+                "icd_coverage_n": 4,
+                "per_case": [
+                    {"case_id": "A", "expected_dept": "OS", "top_depts": ["OS", "GI", "NS"]},
+                    {"case_id": "B", "expected_dept": "GI", "top_depts": ["OS", "NS", "GI"]},
+                ],
+            }
+        )
+
+        metrics = report["metrics"]
+        self.assertEqual(report["benchmark_family"], "kmuc_matching")
+        self.assertEqual(report["status"], "computed")
+        self.assertEqual(report["records"], 2)
+        self.assertAlmostEqual(metrics["dept_top1"], 0.5)
+        self.assertAlmostEqual(metrics["dept_hit@3"], 1.0)
+        self.assertAlmostEqual(metrics["mrr_dept"], (1.0 + (1.0 / 3.0)) / 2.0)
+        self.assertEqual(metrics["proc_coverage@5"], 0.5)
+        self.assertEqual(metrics["proc_coverage_n"], 2)
+        self.assertEqual(metrics["icd_coverage@5"], 0.25)
+        self.assertEqual(metrics["icd_coverage_n"], 4)
+        self.assertEqual(report["metric_provenance"]["dept_top1"], "recomputed_from_per_case_top_depts")
+        self.assertEqual(report["metric_provenance"]["proc_coverage@5"], "reported_by_input_summary")
+        self.assertIn("dept_top1", markdown_original_metric_report(report))
+
+    def test_kmuc_matching_original_metric_ranks_unique_departments(self) -> None:
+        report = evaluate_kmuc_matching_original(
+            {
+                "top_k": 5,
+                "per_case": [
+                    {"case_id": "A", "expected_dept": "GI", "top_depts": ["OS", "OS", "GI", "GI", "NS"]},
+                ],
+            }
+        )
+
+        self.assertAlmostEqual(report["metrics"]["mrr_dept"], 0.5)
+
+    def test_cross_benchmark_uses_original_metric_report_for_kmuc_cell(self) -> None:
+        sde_reports = {"KMUC": {"overall_score": 0.8, "axes": {"medical_fidelity": {"score": 1.0}}}}
+        original_reports = {
+            "KMUC": {
+                "benchmark_family": "kmuc_matching",
+                "status": "computed",
+                "metrics": {
+                    "dept_top1": 0.5,
+                    "dept_hit@3": 1.0,
+                    "mrr_dept": 0.6666666667,
+                    "proc_coverage@5": 0.5,
+                    "icd_coverage@5": 0.25,
+                },
+                "source_report": "unit.json",
+            }
+        }
+
+        report = build_cross_benchmark_report(sde_reports, original_reports=original_reports)
+
+        kmuc_cell = report["stage_a_original"]["kmuc_matching"]["KMUC"]
+        self.assertEqual(kmuc_cell["source_report"], "unit.json")
+        self.assertEqual(
+            kmuc_cell["value"],
+            "`dept_top1=0.5000`, `dept_hit@3=1.0000`, `mrr_dept=0.6667`, `proc_coverage@5=0.5000`, `icd_coverage@5=0.2500`",
+        )
+
     def test_domain_survey_prioritizes_medical_and_cross_domain_candidates(self) -> None:
         survey = build_domain_survey()
         rendered = markdown_domain_survey(survey)
@@ -728,11 +853,22 @@ class SdeBenchCliTests(unittest.TestCase):
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
             kmuc_report = root / "kmuc.json"
+            kmuc_original = root / "kmuc_original.json"
             synthea_report = root / "synthea.json"
             out_json = root / "cross.json"
             out_md = root / "cross.md"
             kmuc_report.write_text(
                 json.dumps({"overall_score": 0.8, "axes": {"medical_fidelity": {"score": 1.0}}}),
+                encoding="utf-8",
+            )
+            kmuc_original.write_text(
+                json.dumps(
+                    {
+                        "benchmark_family": "kmuc_matching",
+                        "status": "computed",
+                        "metrics": {"dept_top1": 0.5, "dept_hit@3": 1.0, "mrr_dept": 0.6667},
+                    }
+                ),
                 encoding="utf-8",
             )
             synthea_report.write_text(
@@ -748,6 +884,8 @@ class SdeBenchCliTests(unittest.TestCase):
                     "cross-benchmark",
                     "--sde-report",
                     f"KMUC={kmuc_report}",
+                    "--original-report",
+                    f"KMUC={kmuc_original}",
                     "--sde-report",
                     f"Synthea={synthea_report}",
                     "--json-out",
@@ -763,7 +901,51 @@ class SdeBenchCliTests(unittest.TestCase):
             self.assertEqual(proc.returncode, 0, proc.stderr)
             matrix = json.loads(out_json.read_text(encoding="utf-8"))
             self.assertIn("benchmark_families", matrix)
+            self.assertEqual(matrix["stage_a_original"]["kmuc_matching"]["KMUC"]["value"], "`dept_top1=0.5000`, `dept_hit@3=1.0000`, `mrr_dept=0.6667`")
             self.assertIn("SDE-Bench Cross-Dataset Results", out_md.read_text(encoding="utf-8"))
+
+    def test_cli_writes_original_metric_report(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            input_path = root / "kmuc_eval.json"
+            out_json = root / "original.json"
+            out_md = root / "original.md"
+            input_path.write_text(
+                json.dumps(
+                    {
+                        "run_tag": "unit",
+                        "top_k": 3,
+                        "per_case": [{"expected_dept": "OS", "top_depts": ["GI", "OS", "NS"]}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "sde_bench",
+                    "original-metric",
+                    "--family",
+                    "kmuc_matching",
+                    "--input",
+                    str(input_path),
+                    "--json-out",
+                    str(out_json),
+                    "--md-out",
+                    str(out_md),
+                ],
+                check=False,
+                text=True,
+                capture_output=True,
+            )
+
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            report = json.loads(out_json.read_text(encoding="utf-8"))
+            self.assertEqual(report["benchmark_family"], "kmuc_matching")
+            self.assertAlmostEqual(report["metrics"]["dept_hit@3"], 1.0)
+            self.assertIn("Original Metric Report", out_md.read_text(encoding="utf-8"))
 
     def test_cli_writes_json_and_markdown_reports(self) -> None:
         with TemporaryDirectory() as tmp:

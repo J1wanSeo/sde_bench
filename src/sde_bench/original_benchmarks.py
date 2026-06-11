@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from .original_metrics import format_original_metric_value
+
 Report = dict[str, Any]
 
 
@@ -117,7 +119,7 @@ SOURCE_NOTES = [
 ]
 
 
-def build_cross_benchmark_report(sde_reports: dict[str, Report]) -> Report:
+def build_cross_benchmark_report(sde_reports: dict[str, Report], *, original_reports: dict[str, Report] | None = None) -> Report:
     original_public = {family: {dataset: dict(cell) for dataset, cell in cells.items()} for family, cells in STAGE_B.items()}
     for dataset, report in sde_reports.items():
         if dataset in original_public["synthea_structured_ehr"]:
@@ -126,6 +128,7 @@ def build_cross_benchmark_report(sde_reports: dict[str, Report]) -> Report:
                 f"`medical_interoperability={score:.4f}`" if score is not None else "n/a: no interoperability fields"
             )
     stage_a_original = _combined_original_matrix(original_public)
+    _apply_original_reports(stage_a_original, original_reports or {})
     stage_b_sde = {
         dataset: _sde_summary(report)
         for dataset, report in sde_reports.items()
@@ -189,15 +192,16 @@ def markdown_cross_benchmark(report: Report) -> str:
             "",
             "## Stage B: SDE-Bench Cross-Dataset Results",
             "",
-            "| Dataset | Overall | Fidelity | Utility | Privacy | Equity | Diversity | Groundedness | Validity | Interoperability |",
-            "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+            "| Dataset | Overall | Fidelity | Utility | Privacy | Equity | Diversity | Scope | Groundedness | Validity | Interoperability |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
         ]
     )
     for dataset, summary in report["stage_b_sde"].items():
         lines.append(
             f"| {dataset} | {_fmt(summary['overall'])} | {_fmt(summary['medical_fidelity'])} | "
             f"{_fmt(summary['clinical_task_utility'])} | {_fmt(summary['privacy'])} | {_fmt(summary['equity'])} | "
-            f"{_fmt(summary['medical_diversity'])} | {_fmt(summary['clinical_groundedness'])} | "
+            f"{_fmt(summary['medical_diversity'])} | {_fmt(summary['clinical_scope_generalizability'])} | "
+            f"{_fmt(summary['clinical_groundedness'])} | "
             f"{_fmt(summary['clinical_validity'])} | {_fmt(summary['medical_interoperability'])} |"
         )
 
@@ -234,6 +238,7 @@ def _sde_summary(report: Report) -> Report:
         "privacy": _axis_score(report, "privacy"),
         "equity": _axis_score(report, "equity"),
         "medical_diversity": _axis_score(report, "medical_diversity"),
+        "clinical_scope_generalizability": _axis_score(report, "clinical_scope_generalizability"),
         "clinical_groundedness": _axis_score(report, "clinical_groundedness"),
         "clinical_validity": _axis_score(report, "clinical_validity"),
         "medical_interoperability": _axis_score(report, "medical_interoperability"),
@@ -247,6 +252,21 @@ def _combined_original_matrix(stage_b: dict[str, dict[str, Report]]) -> dict[str
         cells.update({dataset: dict(cell) for dataset, cell in stage_b.get(family, {}).items()})
         matrix[family] = cells
     return matrix
+
+
+def _apply_original_reports(stage_a_original: dict[str, dict[str, Report]], original_reports: dict[str, Report]) -> None:
+    for dataset, report in original_reports.items():
+        family = report.get("benchmark_family")
+        if not isinstance(family, str) or family not in stage_a_original:
+            continue
+        if dataset not in stage_a_original[family]:
+            continue
+        cell = dict(stage_a_original[family][dataset])
+        cell["status"] = report.get("status", cell.get("status", "computed"))
+        cell["value"] = format_original_metric_value(report)
+        if report.get("source_report"):
+            cell["source_report"] = report["source_report"]
+        stage_a_original[family][dataset] = cell
 
 
 def _dataset_columns(stage: dict[str, dict[str, Report]], *, include_kmuc: bool = True) -> list[str]:

@@ -12,6 +12,7 @@ DEFAULT_AXES = [
     "privacy",
     "equity",
     "medical_diversity",
+    "clinical_scope_generalizability",
     "clinical_groundedness",
     "clinical_validity",
     "medical_interoperability",
