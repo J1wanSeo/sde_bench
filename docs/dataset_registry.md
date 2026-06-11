@@ -35,7 +35,9 @@ preferably as JSONL.
 The current original-paper benchmark matrix is generated at
 `reports/public_benchmarks/cross_benchmark_matrix.md` and keeps three stages:
 KMUC under prior benchmark families, public datasets under those same benchmark
-families, and all datasets under SDE-Bench.
+families, and all datasets under SDE-Bench. Its combined Stage A/B table uses
+one row per original paper benchmark family and one column per evaluated
+dataset, so non-portable prior metrics are visible instead of silently omitted.
 
 The current domain-expansion survey is generated at
 `reports/public_benchmarks/domain_dataset_survey.md`. It records medical,

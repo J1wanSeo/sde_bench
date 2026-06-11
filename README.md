@@ -124,6 +124,11 @@ python3 -m sde_bench cross-benchmark \
   --md-out reports/public_benchmarks/cross_benchmark_matrix.md
 ```
 
+The cross-benchmark matrix emits a combined Stage A/B table: rows are original
+paper benchmark families, columns are KMUC and public synthetic datasets, and
+each cell reports either a computed value, a paper-reported value, an adapter
+requirement, or a non-applicability reason.
+
 Public synthetic dataset survey:
 
 ```bash

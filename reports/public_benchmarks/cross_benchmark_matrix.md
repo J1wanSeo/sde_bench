@@ -17,12 +17,21 @@ The second layer is stronger for publication because it avoids evaluating prior 
 
 ## Original Benchmark Families
 
-| Benchmark Family | Origin Dataset | Native Task | Core Metric | Required Inputs | Portability |
-|---|---|---|---|---|---|
-| `kmuc_matching` | KMUC synthetic lay cases | Patient lay text to department/doctor retrieval | dept_top1, dept_hit@5, mrr_dept, proc_coverage@5, icd_coverage@5 | lay/patient text, expected department, candidate doctor/procedure/ICD index | Portable only when department labels and the same doctor/procedure index are available. |
-| `medsynth_dial_note` | MedSynth | Dial-2-Note and Note-2-Dial fine-tuning on Aci-Bench | LLM jury preference rate; optional BLEU/ROUGE/METEOR | paired dialogue and note, trainable generation model, Aci-Bench train/test, LLM judges | Expensive and task-specific; not directly applicable to datasets without dialogue-note pairs. |
-| `simsum_symptom_ie` | SimSUM | Symptom extraction from clinical notes | F1 for dyspnea, cough, pain, nasal, fever; macro F1 for fever | note text plus five respiratory symptom labels or spans | Portable to respiratory datasets with symptom labels; otherwise requires label projection or manual annotation. |
-| `synthea_structured_ehr` | Synthea | Structured synthetic EHR generation and standards-based interoperability | Standard-format availability and structural consistency | patient, encounter, condition, procedure, drug, observation tables or equivalent FHIR/OMOP fields | Portable to structured EHR/claims datasets; not applicable to pure text datasets. |
+| Benchmark Family | Origin Dataset | Native Task | Core Metric | Formula / Rule | Required Inputs | Portability |
+|---|---|---|---|---|---|---|
+| `kmuc_matching` | KMUC synthetic lay cases | Patient lay text to department/doctor retrieval | dept_top1, dept_hit@5, mrr_dept, proc_coverage@5, icd_coverage@5 | dept_top1 = correct_top1 / N; hit@5 = any_correct_in_top5 / N; MRR = mean(1 / rank_expected_dept) | lay/patient text, expected department, candidate doctor/procedure/ICD index | Portable only when department labels and the same doctor/procedure index are available. |
+| `medsynth_dial_note` | MedSynth | Dial-2-Note and Note-2-Dial fine-tuning on Aci-Bench | LLM jury preference rate; optional BLEU/ROUGE/METEOR | win_rate = preferred_outputs / judged_outputs; text metrics use standard BLEU/ROUGE/METEOR against target notes/dialogues | paired dialogue and note, trainable generation model, Aci-Bench train/test, LLM judges | Expensive and task-specific; not directly applicable to datasets without dialogue-note pairs. |
+| `simsum_symptom_ie` | SimSUM | Symptom extraction from clinical notes | F1 for dyspnea, cough, pain, nasal, fever; macro F1 for fever | F1_symptom = 2 * precision * recall / (precision + recall); macro_f1 = mean(F1_dyspnea, F1_cough, F1_pain, F1_nasal, F1_fever) | note text plus five respiratory symptom labels or spans | Portable to respiratory datasets with symptom labels; otherwise requires label projection or manual annotation. |
+| `synthea_structured_ehr` | Synthea | Structured synthetic EHR generation and standards-based interoperability | Standard-format availability and structural consistency | mean(domain_coverage, standard_vocabulary_rate, temporal_traceability, relational_integrity) | patient, encounter, condition, procedure, drug, observation tables or equivalent FHIR/OMOP fields | Portable to structured EHR/claims datasets; not applicable to pure text datasets. |
+
+## Stage A/B Combined: Prior Benchmarks Across Datasets
+
+| Benchmark Family | KMUC | MedSynth | SimSUM | Synthea | HealthGymART |
+|---|---:|---:|---:|---:|---:|
+| `kmuc_matching` | `computed`: `dept_top1=0.7467`, `dept_hit@5=0.8800`, `mrr_dept=0.7943`, `proc_coverage@5=0.5889`, `icd_coverage@5=0.5931` | `not_applicable` (no expected department or doctor index) | `not_applicable` (respiratory symptoms only, no department labels) | `not_applicable` (structured EHR lacks KMUC doctor/procedure retrieval labels) | `not_applicable` (no expected department or doctor index) |
+| `medsynth_dial_note` | `requires_adapter` | `paper_reported`: Dial-2-Note `60.0%/95.0%/52.5%`; Note-2-Dial `55.0%/87.5%/80.0%` jury preference | `not_applicable` (no dialogue-note pairs) | `not_applicable` (no dialogue-note pairs) | `not_applicable` (no dialogue-note pairs) |
+| `simsum_symptom_ie` | `requires_labels` | `not_applicable` (no gold dyspnea/cough/pain/nasal/fever labels) | `paper_reported`: normal F1 dyspnea `0.9617`, cough `0.9603`, pain `0.8143`, nasal `0.9628`, fever `0.9096`; compact F1 dyspnea `0.9444`, cough `0.9397`, pain `0.7940`, nasal `0.9622`, fever `0.9010` | `requires_adapter`: derive respiratory symptoms from Synthea conditions/observations | `not_applicable` (longitudinal HIV ART data lacks respiratory symptom labels) |
+| `synthea_structured_ehr` | `not_applicable` | `not_applicable` (no interoperability fields) | `not_applicable` (no interoperability fields) | `computed_from_sde_bench`: `medical_interoperability=1.0000` | `computed_from_sde_bench`: `medical_interoperability=0.9583` |
 
 ## Stage A: KMUC Under Prior Benchmarks
 
@@ -35,12 +44,12 @@ The second layer is stronger for publication because it avoids evaluating prior 
 
 ## Stage B: Public Datasets Under Prior Benchmarks
 
-| Benchmark Family | MedSynth | SimSUM | Synthea |
-|---|---:|---:|---:|
-| `kmuc_matching` | `not_applicable` (no expected department or doctor index) | `not_applicable` (respiratory symptoms only, no department labels) | `not_applicable` (structured EHR lacks KMUC doctor/procedure retrieval labels) |
-| `medsynth_dial_note` | `paper_reported`: Dial-2-Note `60.0%/95.0%/52.5%`; Note-2-Dial `55.0%/87.5%/80.0%` jury preference | `not_applicable` (no dialogue-note pairs) | `not_applicable` (no dialogue-note pairs) |
-| `simsum_symptom_ie` | `not_applicable` (no gold dyspnea/cough/pain/nasal/fever labels) | `paper_reported`: normal F1 dyspnea `0.9617`, cough `0.9603`, pain `0.8143`, nasal `0.9628`, fever `0.9096`; compact F1 dyspnea `0.9444`, cough `0.9397`, pain `0.7940`, nasal `0.9622`, fever `0.9010` | `requires_adapter`: derive respiratory symptoms from Synthea conditions/observations |
-| `synthea_structured_ehr` | `not_applicable` (text pair dataset) | `not_applicable` (single-encounter tabular/text benchmark) | `computed_from_sde_bench`: `medical_interoperability=1.0000` |
+| Benchmark Family | MedSynth | SimSUM | Synthea | HealthGymART |
+|---|---:|---:|---:|---:|
+| `kmuc_matching` | `not_applicable` (no expected department or doctor index) | `not_applicable` (respiratory symptoms only, no department labels) | `not_applicable` (structured EHR lacks KMUC doctor/procedure retrieval labels) | `not_applicable` (no expected department or doctor index) |
+| `medsynth_dial_note` | `paper_reported`: Dial-2-Note `60.0%/95.0%/52.5%`; Note-2-Dial `55.0%/87.5%/80.0%` jury preference | `not_applicable` (no dialogue-note pairs) | `not_applicable` (no dialogue-note pairs) | `not_applicable` (no dialogue-note pairs) |
+| `simsum_symptom_ie` | `not_applicable` (no gold dyspnea/cough/pain/nasal/fever labels) | `paper_reported`: normal F1 dyspnea `0.9617`, cough `0.9603`, pain `0.8143`, nasal `0.9628`, fever `0.9096`; compact F1 dyspnea `0.9444`, cough `0.9397`, pain `0.7940`, nasal `0.9622`, fever `0.9010` | `requires_adapter`: derive respiratory symptoms from Synthea conditions/observations | `not_applicable` (longitudinal HIV ART data lacks respiratory symptom labels) |
+| `synthea_structured_ehr` | `not_applicable` (no interoperability fields) | `not_applicable` (no interoperability fields) | `computed_from_sde_bench`: `medical_interoperability=1.0000` | `computed_from_sde_bench`: `medical_interoperability=0.9583` |
 
 ## Stage C: SDE-Bench Cross-Dataset Results
 
@@ -54,10 +63,10 @@ The second layer is stronger for publication because it avoids evaluating prior 
 
 ## Implementation Roadmap
 
-1. Implement `benchmark_families/` with one module per original benchmark: `kmuc_matching`, `medsynth_dial_note`, `simsum_symptom_ie`, and `synthea_structured_ehr`.
-2. Add dataset-to-benchmark view adapters. These should produce benchmark-native inputs, not mutate the SDE-Bench canonical records.
-3. For each cell in Stage A/B, emit one of three states: `computed`, `not_applicable`, or `requires_adapter`.
-4. Only compare numeric cells when the same benchmark family, data split, and required labels are present. Otherwise, report the applicability state.
+1. Keep each original paper protocol as a versioned benchmark family with explicit formula, required inputs, and applicability rules.
+2. Add executable dataset-to-benchmark view adapters for cells currently marked `requires_adapter` or `requires_labels`.
+3. For each Stage A/B cell, emit one of four states: `computed`, `paper_reported`, `requires_adapter`, or `not_applicable`.
+4. Compare numeric cells only when the same benchmark family, data split, and required labels are present. Otherwise, report the applicability state as part of the result.
 
 This keeps the paper claim defensible: KMUC can be shown against prior work's own tasks where portable, while SDE-Bench explains the common medical synthetic-data profile across heterogeneous datasets.
 

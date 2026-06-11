@@ -554,6 +554,41 @@ class SdeBenchCliTests(unittest.TestCase):
         self.assertIn("Stage A", rendered)
         self.assertIn("medical_interoperability=1.0000", rendered)
 
+    def test_original_benchmark_matrix_exposes_formula_and_combined_stage(self) -> None:
+        reports = {
+            "KMUC": {
+                "overall_score": 0.8,
+                "axes": {
+                    "medical_interoperability": {"score": None},
+                },
+            },
+            "Synthea": {
+                "overall_score": 0.82,
+                "axes": {
+                    "medical_interoperability": {"score": 1.0},
+                },
+            },
+            "HealthGymART": {
+                "overall_score": 0.93,
+                "axes": {
+                    "medical_interoperability": {"score": 0.9583333333333334},
+                },
+            },
+        }
+
+        report = build_cross_benchmark_report(reports)
+        rendered = markdown_cross_benchmark(report)
+
+        synthea_family = report["benchmark_families"]["synthea_structured_ehr"]
+        self.assertIn("metric_formula", synthea_family)
+        self.assertIn("applicability_rule", synthea_family)
+        self.assertEqual(report["stage_ab"]["synthea_structured_ehr"]["KMUC"]["status"], "not_applicable")
+        self.assertEqual(report["stage_ab"]["synthea_structured_ehr"]["Synthea"]["value"], "`medical_interoperability=1.0000`")
+        self.assertEqual(report["stage_ab"]["synthea_structured_ehr"]["HealthGymART"]["value"], "`medical_interoperability=0.9583`")
+        self.assertIn("Stage A/B Combined", rendered)
+        self.assertIn("mean(domain_coverage", rendered)
+        self.assertIn("HealthGymART", rendered)
+
     def test_cli_writes_cross_benchmark_matrix(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
