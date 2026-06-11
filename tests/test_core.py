@@ -800,15 +800,15 @@ class SdeBenchCliTests(unittest.TestCase):
 
         self.assertEqual(report["stage_a_original"]["kmuc_matching"]["KMUC"]["status"], "computed")
         self.assertEqual(report["stage_a_original"]["simsum_symptom_ie"]["SimSUM"]["status"], "paper_reported")
-        self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["Synthea"]["value"], "`medical_interoperability=1.0000`")
-        self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["Synthea"]["status"], "sde_proxy")
+        self.assertIn("FHIR", report["stage_a_original"]["synthea_structured_ehr"]["Synthea"]["value"])
+        self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["Synthea"]["status"], "paper_reported")
         self.assertIn("Stage A: Original-Metric Crosswalk", rendered)
         self.assertIn("Stage B: SDE-Bench Cross-Dataset Results", rendered)
         self.assertIn("available-axis mean", rendered)
         self.assertIn("`sde_proxy`", rendered)
         self.assertNotIn("computed_from_sde_bench", rendered)
         self.assertLess(rendered.index("**Original-benchmark layer**"), rendered.index("**SDE-Bench layer**"))
-        self.assertIn("medical_interoperability=1.0000", rendered)
+        self.assertIn("FHIR", rendered)
 
     def test_original_benchmark_matrix_exposes_formula_and_two_stage_design(self) -> None:
         reports = {
@@ -845,17 +845,17 @@ class SdeBenchCliTests(unittest.TestCase):
         self.assertIn("metric_formula", synthea_family)
         self.assertIn("applicability_rule", synthea_family)
         self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["KMUC"]["status"], "not_applicable")
-        self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["Synthea"]["status"], "sde_proxy")
-        self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["Synthea"]["value"], "`medical_interoperability=1.0000`")
+        self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["Synthea"]["status"], "paper_reported")
+        self.assertIn("FHIR", report["stage_a_original"]["synthea_structured_ehr"]["Synthea"]["value"])
         self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["HealthGymART"]["value"], "`medical_interoperability=0.9583`")
         self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["DeSynPUF"]["value"], "`medical_interoperability=0.9165`")
         self.assertIn("Original-Metric Crosswalk", rendered)
         self.assertNotIn("Stage C", rendered)
-        self.assertIn("mean(domain_coverage", rendered)
+        self.assertIn("FHIR/C-CDA", rendered)
         self.assertIn("HealthGymART", rendered)
         self.assertIn("DeSynPUF", rendered)
 
-    def test_cross_benchmark_readiness_does_not_count_sde_proxy_as_paper_equivalent(self) -> None:
+    def test_cross_benchmark_readiness_separates_supplemental_proxies_from_blockers(self) -> None:
         reports = {
             "KMUC": {
                 "overall_score": 0.8,
@@ -882,13 +882,15 @@ class SdeBenchCliTests(unittest.TestCase):
         rendered = markdown_cross_benchmark(report)
 
         self.assertEqual(readiness["claim_status"], "not_ready_for_full_equivalence")
-        self.assertEqual(readiness["status_counts"]["sde_proxy"], 2)
-        self.assertEqual(readiness["evidence_counts"]["paper_equivalent_cells"], 3)
+        self.assertEqual(readiness["status_counts"]["sde_proxy"], 1)
+        self.assertGreaterEqual(readiness["evidence_counts"]["paper_equivalent_cells"], 6)
         self.assertNotIn("sde_proxy", readiness["paper_equivalent_statuses"])
+        self.assertEqual(len(readiness["supplemental_proxy_cells"]), 1)
+        self.assertFalse(any(cell["status"] == "sde_proxy" for cell in readiness["blocking_cells"]))
         self.assertIn("requires_adapter", readiness["blocking_statuses"])
         self.assertIn("Publication Readiness Gate", rendered)
         self.assertIn("not ready for a full paper-equivalent benchmark claim", rendered)
-        self.assertIn("SDE-derived proxy cells are not counted as original-paper evidence", rendered)
+        self.assertIn("Supplemental Proxy Cells", rendered)
 
     def test_cross_benchmark_readiness_lists_blocking_cells_with_next_actions(self) -> None:
         reports = {
@@ -915,19 +917,29 @@ class SdeBenchCliTests(unittest.TestCase):
             for cell in blockers
             if cell["benchmark_family"] == "medsynth_dial_note" and cell["dataset"] == "KMUC"
         )
-        synthea_proxy = next(
-            cell
-            for cell in blockers
-            if cell["benchmark_family"] == "synthea_structured_ehr" and cell["dataset"] == "Synthea"
-        )
         self.assertEqual(kmuc_medsynth["status"], "requires_adapter")
         self.assertEqual(kmuc_medsynth["blocks"], "full_equivalence")
         self.assertIn("dialogue-note", kmuc_medsynth["next_action"])
-        self.assertEqual(synthea_proxy["status"], "sde_proxy")
-        self.assertEqual(synthea_proxy["blocks"], "paper_equivalent_evidence")
+        self.assertFalse(any(cell["status"] == "sde_proxy" for cell in blockers))
         self.assertIn("Blocking Cells", rendered)
         self.assertIn("KMUC", rendered)
         self.assertIn("medsynth_dial_note", rendered)
+
+    def test_cross_benchmark_adds_self_evaluation_families_for_structured_public_datasets(self) -> None:
+        report = build_cross_benchmark_report(
+            {
+                "KMUC": {"overall_score": 0.8, "axes": {"medical_interoperability": {"score": None}}},
+                "Synthea": {"overall_score": 0.82, "axes": {"medical_interoperability": {"score": 1.0}}},
+                "HealthGymART": {"overall_score": 0.93, "axes": {"medical_interoperability": {"score": 0.9583333333333334}}},
+                "DeSynPUF": {"overall_score": 0.88, "axes": {"medical_interoperability": {"score": 0.9164644921676102}}},
+            }
+        )
+
+        self.assertEqual(report["stage_a_original"]["synthea_structured_ehr"]["Synthea"]["status"], "paper_reported")
+        self.assertEqual(report["stage_a_original"]["healthgym_longitudinal_realism"]["HealthGymART"]["status"], "paper_reported")
+        self.assertEqual(report["stage_a_original"]["desynpuf_claims_public_use"]["DeSynPUF"]["status"], "paper_reported")
+        self.assertIn("healthgym_longitudinal_realism", report["benchmark_families"])
+        self.assertIn("desynpuf_claims_public_use", report["benchmark_families"])
 
     def test_cli_writes_cross_benchmark_matrix(self) -> None:
         with TemporaryDirectory() as tmp:

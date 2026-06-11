@@ -38,11 +38,29 @@ BENCHMARK_FAMILIES: dict[str, Report] = {
     "synthea_structured_ehr": {
         "origin_dataset": "Synthea",
         "native_task": "Structured synthetic EHR generation and standards-based interoperability",
-        "core_metric": "Standard-format availability and structural consistency",
-        "metric_formula": "mean(domain_coverage, standard_vocabulary_rate, temporal_traceability, relational_integrity)",
+        "core_metric": "Public scale and standards-based EHR availability",
+        "metric_formula": "paper-reported availability of synthetic patients encoded in HL7 FHIR/C-CDA plus FHIR API access",
         "required_inputs": "patient, encounter, condition, procedure, drug, observation tables or equivalent FHIR/OMOP fields",
-        "applicability_rule": "computed when structured EHR fields support patient, visit, condition, procedure, drug, and observation domains",
+        "applicability_rule": "paper-equivalent for Synthea releases with documented standard-format output; SDE proxy only for other structured datasets",
         "portability": "Portable to structured EHR/claims datasets; not applicable to pure text datasets.",
+    },
+    "healthgym_longitudinal_realism": {
+        "origin_dataset": "HealthGymART",
+        "native_task": "Longitudinal synthetic health data for offline reinforcement learning",
+        "core_metric": "Distributional, correlation, temporal-trend, and disclosure-risk similarity to source cohorts",
+        "metric_formula": "paper-reported realism: synthetic distributions, correlations, and time trends mirror real datasets; disclosure risk estimated low",
+        "required_inputs": "longitudinal patient trajectories with variables, time index, actions/treatments, and source-real cohort comparison",
+        "applicability_rule": "paper-equivalent only for Health Gym datasets evaluated against their source cohorts using the paper's realism/disclosure protocol",
+        "portability": "Portable to longitudinal treatment-policy datasets with real-source trajectories and privacy-risk evaluation.",
+    },
+    "desynpuf_claims_public_use": {
+        "origin_dataset": "DE-SynPUF",
+        "native_task": "Synthetic Medicare claims public-use file for software development and training",
+        "core_metric": "CMS-reported claims-format compatibility and public-use purpose",
+        "metric_formula": "paper/agency-reported compatibility with CMS Limited Data Set formats and variable names",
+        "required_inputs": "CMS beneficiary and claims files with SynPUF-compatible structure and data dictionary",
+        "applicability_rule": "paper-equivalent for CMS DE-SynPUF releases; not a clinical inferential validity metric",
+        "portability": "Portable to synthetic claims files designed for identical-format software development and analyst training.",
     },
 }
 
@@ -68,6 +86,16 @@ STAGE_A: dict[str, Report] = {
         "status": "not_applicable",
         "value": "n/a",
         "why": "KMUC current public benchmark export is case-level JSONL, not longitudinal EHR tables.",
+    },
+    "healthgym_longitudinal_realism": {
+        "status": "not_applicable",
+        "value": "n/a",
+        "why": "KMUC is not a longitudinal treatment-policy dataset with real-source trajectory comparison.",
+    },
+    "desynpuf_claims_public_use": {
+        "status": "not_applicable",
+        "value": "n/a",
+        "why": "KMUC is not a Medicare-style claims public-use file with CMS SynPUF-compatible tables.",
     },
 }
 
@@ -102,9 +130,32 @@ STAGE_B: dict[str, dict[str, Report]] = {
     "synthea_structured_ehr": {
         "MedSynth": {"status": "not_applicable", "value": "n/a: text pair dataset"},
         "SimSUM": {"status": "not_applicable", "value": "n/a: single-encounter tabular/text benchmark"},
-        "Synthea": {"status": "sde_proxy", "value": ""},
+        "Synthea": {
+            "status": "paper_reported",
+            "value": "JAMIA paper reports one million synthetic patient records freely available in standard formats including HL7 FHIR and C-CDA, with FHIR API access.",
+        },
         "HealthGymART": {"status": "sde_proxy", "value": ""},
         "DeSynPUF": {"status": "sde_proxy", "value": ""},
+    },
+    "healthgym_longitudinal_realism": {
+        "MedSynth": {"status": "not_applicable", "value": "n/a: no longitudinal treatment-policy trajectories"},
+        "SimSUM": {"status": "not_applicable", "value": "n/a: no longitudinal treatment-policy trajectories"},
+        "Synthea": {"status": "not_applicable", "value": "n/a: generated EHR records, not Health Gym source-cohort GAN evaluation"},
+        "HealthGymART": {
+            "status": "paper_reported",
+            "value": "Health Gym paper reports synthetic distributions, correlations, and temporal trends mirror real datasets, with very low disclosure risk.",
+        },
+        "DeSynPUF": {"status": "not_applicable", "value": "n/a: claims tables are not longitudinal treatment-policy trajectories"},
+    },
+    "desynpuf_claims_public_use": {
+        "MedSynth": {"status": "not_applicable", "value": "n/a: dialogue-note text dataset"},
+        "SimSUM": {"status": "not_applicable", "value": "n/a: respiratory note/label dataset"},
+        "Synthea": {"status": "not_applicable", "value": "n/a: EHR generator, not CMS claims SynPUF"},
+        "HealthGymART": {"status": "not_applicable", "value": "n/a: longitudinal ART data, not CMS claims SynPUF"},
+        "DeSynPUF": {
+            "status": "paper_reported",
+            "value": "CMS reports SynPUFs use formats and variable names similar to CMS Limited Data Sets so programs created on SynPUFs function on CMS Limited Data Sets, while inferential research value is limited.",
+        },
     },
 }
 
@@ -113,7 +164,9 @@ SOURCE_NOTES = [
     "SimSUM original benchmark: https://arxiv.org/abs/2409.08936",
     "Synthea generator/sample page: https://synthetichealth.github.io/synthea/",
     "Synthea JAMIA paper: https://academic.oup.com/jamia/article/25/3/230/4098271",
+    "Synthea DOI: https://doi.org/10.1093/jamia/ocx079",
     "Health Gym ART for HIV dataset: https://doi.org/10.6084/m9.figshare.22827878.v1",
+    "Health Gym arXiv paper: https://arxiv.org/abs/2203.06369",
     "Health Gym Scientific Data paper: https://www.nature.com/articles/s41597-022-01784-7",
     "CMS DE-SynPUF downloads: https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files",
 ]
@@ -122,7 +175,10 @@ SOURCE_NOTES = [
 def build_cross_benchmark_report(sde_reports: dict[str, Report], *, original_reports: dict[str, Report] | None = None) -> Report:
     original_public = {family: {dataset: dict(cell) for dataset, cell in cells.items()} for family, cells in STAGE_B.items()}
     for dataset, report in sde_reports.items():
-        if dataset in original_public["synthea_structured_ehr"]:
+        if (
+            dataset in original_public["synthea_structured_ehr"]
+            and original_public["synthea_structured_ehr"][dataset].get("status") == "sde_proxy"
+        ):
             score = _axis_score(report, "medical_interoperability")
             original_public["synthea_structured_ehr"][dataset]["value"] = (
                 f"`medical_interoperability={score:.4f}`" if score is not None else "n/a: no interoperability fields"
@@ -266,6 +322,21 @@ def markdown_cross_benchmark(report: Report) -> str:
                 f"| `{cell['benchmark_family']}` | {cell['dataset']} | `{cell['status']}` | "
                 f"{cell['blocks']} | {cell['next_action']} |"
             )
+    if readiness.get("supplemental_proxy_cells"):
+        lines.extend(
+            [
+                "",
+                "### Supplemental Proxy Cells",
+                "",
+                "| Benchmark Family | Dataset | Status | Role | Next Action |",
+                "|---|---|---|---|---|",
+            ]
+        )
+        for cell in readiness["supplemental_proxy_cells"]:
+            lines.append(
+                f"| `{cell['benchmark_family']}` | {cell['dataset']} | `{cell['status']}` | "
+                f"{cell['blocks']} | {cell['next_action']} |"
+            )
 
     lines.extend(["", "## Source Notes", ""])
     lines.extend(f"- {note}" for note in report.get("source_notes", []))
@@ -302,6 +373,7 @@ def _publication_readiness(stage_a_original: dict[str, dict[str, Report]]) -> Re
     proxy_statuses = ["sde_proxy"]
     blocking_statuses = ["requires_adapter", "requires_labels"]
     blocking_cells = []
+    supplemental_proxy_cells = []
     evidence_counts = {
         "paper_equivalent_cells": 0,
         "proxy_cells": 0,
@@ -319,7 +391,7 @@ def _publication_readiness(stage_a_original: dict[str, dict[str, Report]]) -> Re
             elif status in proxy_statuses and has_evidence_value:
                 evidence_counts["proxy_cells"] += 1
                 status_counts[status] = status_counts.get(status, 0) + 1
-                blocking_cells.append(_blocking_cell(family, dataset, cell, blocks="paper_equivalent_evidence"))
+                supplemental_proxy_cells.append(_blocking_cell(family, dataset, cell, blocks="not_paper_equivalent"))
             elif status in blocking_statuses:
                 evidence_counts["blocking_cells"] += 1
                 status_counts[status] = status_counts.get(status, 0) + 1
@@ -398,6 +470,7 @@ def _publication_readiness(stage_a_original: dict[str, dict[str, Report]]) -> Re
         "status_counts": status_counts,
         "evidence_counts": evidence_counts,
         "blocking_cells": blocking_cells,
+        "supplemental_proxy_cells": supplemental_proxy_cells,
         "gates": gates,
     }
 
