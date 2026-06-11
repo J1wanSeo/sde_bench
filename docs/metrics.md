@@ -1,6 +1,6 @@
 # Metrics
 
-SDE-Bench reports a seven-axis medical synthetic-data profile. Each axis exposes
+SDE-Bench reports an eight-axis medical synthetic-data profile. Each axis exposes
 raw metrics and a bounded `score` in `[0, 1]`. The score is intended for quick
 comparison; papers should report the raw metrics as well.
 
@@ -80,3 +80,20 @@ Designed for clinical case and EHR-like datasets.
 - `dept_consistency`: synthetic department agrees with source department.
 - `diagnosis_source_overlap`: token overlap between generated and source
   diagnosis fields.
+
+### Medical Interoperability
+
+Designed for structured EHR and claims-style datasets. This axis is optional:
+when no interoperability fields are present, the score is `n/a` and excluded
+from the overall score.
+
+- `omop_domain_coverage`: fraction of core OMOP-style domains represented:
+  `person`, `visit_occurrence`, `condition_occurrence`,
+  `procedure_occurrence`, `drug_exposure`, and `measurement`.
+- `standard_vocabulary_rate`: fraction of records whose declared vocabularies
+  are standard clinical vocabularies such as ICD-10, SNOMED CT, LOINC, RxNorm,
+  CPT, or HCPCS.
+- `temporal_traceability`: fraction of records with parseable event date fields
+  such as `encounter_start`, `condition_start`, or `procedure_date`.
+- `relational_integrity`: fraction of records with a patient/case identifier and
+  a visit, encounter, or source link.

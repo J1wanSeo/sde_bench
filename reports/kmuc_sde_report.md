@@ -12,3 +12,7 @@
 | medical_diversity | 1.0000 | category_coverage=1.0000, entropy_ratio=1.0000, unique_record_ratio=1.0000, categorical_columns=7 |
 | clinical_groundedness | 0.5028 | source_attribution_rate=1.0000, evidence_support_score=0.0056, evidence_support_n=750 |
 | clinical_validity | 0.9408 | age_validity=1.0000, non_empty_diagnosis_rate=1.0000, icd10_format_validity=1.0000, procedure_completeness=0.5267, acuity_validity=1.0000, laterality_validity=1.0000, dept_consistency=1.0000, diagnosis_source_overlap=1.0000 |
+| medical_interoperability | n/a | skipped=no_interoperability_fields |
+
+## Skipped
+- medical_interoperability: provide OMOP/FHIR/CSV-derived interoperability fields

@@ -68,9 +68,17 @@
         "dept_consistency": 1.0,
         "diagnosis_source_overlap": 1.0
       }
+    },
+    "medical_interoperability": {
+      "score": null,
+      "metrics": {
+        "skipped": "no_interoperability_fields"
+      }
     }
   },
   "overall_score": 0.8091972103490085,
-  "skipped": [],
+  "skipped": [
+    "medical_interoperability: provide OMOP/FHIR/CSV-derived interoperability fields"
+  ],
   "name": "synthetic_lay"
 }

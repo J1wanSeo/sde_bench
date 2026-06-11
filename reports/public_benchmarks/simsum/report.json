@@ -63,11 +63,18 @@
         "laterality_validity": 1.0,
         "diagnosis_source_overlap": 1.0
       }
+    },
+    "medical_interoperability": {
+      "score": null,
+      "metrics": {
+        "skipped": "no_interoperability_fields"
+      }
     }
   },
   "overall_score": 0.7843130319068088,
   "skipped": [
-    "equity.group_metrics: provide sensitive columns such as sex/gender/race"
+    "equity.group_metrics: provide sensitive columns such as sex/gender/race",
+    "medical_interoperability: provide OMOP/FHIR/CSV-derived interoperability fields"
   ],
   "name": "synthetic"
 }

@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .adapters.kmuc import export_kmuc_records
 from .adapters.medsynth import export_medsynth_records
+from .adapters.synthea import export_synthea_records
 from .adapters.synsum import export_synsum_records
 from .core import benchmark, evaluate
 from .io import load_records, load_source, write_json, write_markdown, write_records
@@ -56,6 +57,13 @@ def main(argv: list[str] | None = None) -> int:
     medsynth_parser.add_argument("--split-fraction", type=float, default=0.5)
     medsynth_parser.add_argument("--limit", type=int, default=None)
 
+    synthea_parser = sub.add_parser("synthea-export", help="export Synthea CSV directory records to SDE-Bench records")
+    synthea_parser.add_argument("--csv-dir", required=True, type=Path, help="Synthea CSV output directory")
+    synthea_parser.add_argument("--out-dir", required=True, type=Path)
+    synthea_parser.add_argument("--format", choices=["jsonl", "json", "csv"], default="jsonl")
+    synthea_parser.add_argument("--split-fraction", type=float, default=0.5)
+    synthea_parser.add_argument("--limit", type=int, default=None)
+
     args = parser.parse_args(argv)
 
     if args.command == "kmuc-export":
@@ -94,6 +102,19 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "medsynth-export":
         exported = export_medsynth_records(load_records(args.input), split_fraction=args.split_fraction, limit=args.limit)
+        args.out_dir.mkdir(parents=True, exist_ok=True)
+        suffix = f".{args.format}"
+        write_records(exported["reference"], args.out_dir / f"reference{suffix}")
+        write_records(exported["source"], args.out_dir / f"source{suffix}")
+        write_records(exported["synthetic"], args.out_dir / f"synthetic{suffix}")
+        print(
+            f"exported reference={len(exported['reference'])} source={len(exported['source'])} "
+            f"synthetic={len(exported['synthetic'])} to {args.out_dir}"
+        )
+        return 0
+
+    if args.command == "synthea-export":
+        exported = export_synthea_records(args.csv_dir, split_fraction=args.split_fraction, limit=args.limit)
         args.out_dir.mkdir(parents=True, exist_ok=True)
         suffix = f".{args.format}"
         write_records(exported["reference"], args.out_dir / f"reference{suffix}")

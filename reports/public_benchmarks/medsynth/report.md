@@ -12,6 +12,8 @@
 | medical_diversity | 0.7198 | category_coverage=0.3117, entropy_ratio=1.0000, unique_record_ratio=0.8477, categorical_columns=4 |
 | clinical_groundedness | 0.8128 | source_attribution_rate=1.0000, evidence_support_score=0.6256, evidence_support_n=5118 |
 | clinical_validity | 1.0000 | age_validity=1.0000, non_empty_diagnosis_rate=1.0000, icd10_format_validity=1.0000, procedure_completeness=1.0000, acuity_validity=1.0000, laterality_validity=1.0000, diagnosis_source_overlap=1.0000 |
+| medical_interoperability | n/a | skipped=no_interoperability_fields |
 
 ## Skipped
 - equity.group_metrics: provide sensitive columns such as sex/gender/race
+- medical_interoperability: provide OMOP/FHIR/CSV-derived interoperability fields

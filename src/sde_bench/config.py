@@ -14,6 +14,7 @@ DEFAULT_AXES = [
     "medical_diversity",
     "clinical_groundedness",
     "clinical_validity",
+    "medical_interoperability",
 ]
 
 

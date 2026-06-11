@@ -19,6 +19,7 @@ AXIS_ORDER = [
     "medical_diversity",
     "clinical_groundedness",
     "clinical_validity",
+    "medical_interoperability",
 ]
 
 ID_COLUMNS = {
@@ -37,6 +38,33 @@ DEFAULT_SENSITIVE_COLUMNS = ("sex", "gender", "race", "ethnicity", "age_group")
 ICD10_RE = re.compile(r"^[A-TV-Z][0-9][0-9A-Z]?(?:\.?[0-9A-Z]{1,4})?$")
 VALID_ACUITY = {"routine", "elective", "urgent", "emergency"}
 VALID_LATERALITY = {"left", "right", "bilateral", "none", "midline", "unknown"}
+OMOP_CORE_DOMAINS = {
+    "person",
+    "visit_occurrence",
+    "condition_occurrence",
+    "procedure_occurrence",
+    "drug_exposure",
+    "measurement",
+}
+STANDARD_VOCABULARIES = {
+    "ICD10",
+    "ICD10CM",
+    "SNOMED",
+    "SNOMEDCT",
+    "SNOMED-CT",
+    "LOINC",
+    "RXNORM",
+    "CPT",
+    "HCPCS",
+}
+EVENT_DATE_FIELDS = (
+    "encounter_start",
+    "visit_start",
+    "condition_start",
+    "procedure_date",
+    "drug_start",
+    "measurement_date",
+)
 
 
 def evaluate(
@@ -67,6 +95,7 @@ def evaluate(
             ("medical_diversity", _diversity(real, synthetic)),
             ("clinical_groundedness", _groundedness(synthetic, source)),
             ("clinical_validity", _clinical_validity(synthetic, source)),
+            ("medical_interoperability", _medical_interoperability(synthetic)),
         ]
     )
     axes = OrderedDict((axis, result) for axis, result in all_axes.items() if axis in enabled_axes)
@@ -261,6 +290,66 @@ def _clinical_validity(synthetic: list[Record], source: dict[str, Record] | None
     return {"score": _mean(v for v in metrics.values() if isinstance(v, int | float)), "metrics": metrics}
 
 
+def _medical_interoperability(synthetic: list[Record]) -> dict[str, Any]:
+    has_fields = any(
+        row.get("omop_domains") not in (None, "")
+        or row.get("standard_vocabularies") not in (None, "")
+        or any(row.get(field) not in (None, "") for field in EVENT_DATE_FIELDS)
+        or row.get("encounter_id") not in (None, "")
+        or row.get("visit_id") not in (None, "")
+        for row in synthetic
+    )
+    if not has_fields:
+        return {"score": None, "metrics": {"skipped": "no_interoperability_fields"}}
+
+    domains = {
+        domain
+        for row in synthetic
+        for domain in _normalized_values(row.get("omop_domains"))
+        if domain in OMOP_CORE_DOMAINS
+    }
+    vocabulary_rows = [row for row in synthetic if row.get("standard_vocabularies") not in (None, "")]
+    temporal_rows = [row for row in synthetic if any(field in row for field in EVENT_DATE_FIELDS)]
+    relational_rows = [
+        row
+        for row in synthetic
+        if row.get("encounter_id") not in (None, "") or row.get("visit_id") not in (None, "") or row.get("source_id") not in (None, "")
+    ]
+    metrics = {
+        "omop_domain_coverage": len(domains) / len(OMOP_CORE_DOMAINS),
+        "standard_vocabulary_rate": _standard_vocabulary_rate(vocabulary_rows),
+        "temporal_traceability": _valid_rate(
+            temporal_rows,
+            lambda row: any(_looks_like_date(row.get(field)) for field in EVENT_DATE_FIELDS),
+        )
+        if temporal_rows
+        else None,
+        "relational_integrity": _valid_rate(
+            relational_rows,
+            lambda row: row.get("case_id") not in (None, "")
+            and (
+                row.get("encounter_id") not in (None, "")
+                or row.get("visit_id") not in (None, "")
+                or row.get("source_id") not in (None, "")
+            ),
+        )
+        if relational_rows
+        else None,
+    }
+    return {"score": _mean(v for v in metrics.values() if isinstance(v, int | float)), "metrics": metrics}
+
+
+def _standard_vocabulary_rate(rows: list[Record]) -> float | None:
+    if not rows:
+        return None
+    valid = 0
+    for row in rows:
+        values = _normalized_values(row.get("standard_vocabularies"))
+        if values and all(value.upper() in STANDARD_VOCABULARIES for value in values):
+            valid += 1
+    return valid / len(rows)
+
+
 def _field_completeness(rows: list[Record], field: str) -> float:
     applicable = [row for row in rows if field in row]
     if not applicable:
@@ -295,6 +384,16 @@ def _split_values(value: Any) -> list[str]:
     return [part.strip() for part in re.split(r"[,;|]", str(value)) if part.strip()]
 
 
+def _normalized_values(value: Any) -> list[str]:
+    return [part.strip().lower() for part in _split_values(value)]
+
+
+def _looks_like_date(value: Any) -> bool:
+    if value in (None, ""):
+        return False
+    return bool(re.match(r"^\d{4}-\d{2}-\d{2}", str(value).strip()))
+
+
 def _skipped(
     real: list[Record],
     synthetic: list[Record],
@@ -312,6 +411,13 @@ def _skipped(
     if not source:
         skipped.append("clinical_groundedness.source_validation: provide --source for source_id validation")
         skipped.append("clinical_validity.source_field_checks: provide --source")
+    if not any(
+        row.get("omop_domains") not in (None, "")
+        or row.get("standard_vocabularies") not in (None, "")
+        or any(row.get(field) not in (None, "") for field in EVENT_DATE_FIELDS)
+        for row in synthetic
+    ):
+        skipped.append("medical_interoperability: provide OMOP/FHIR/CSV-derived interoperability fields")
     return skipped
 
 

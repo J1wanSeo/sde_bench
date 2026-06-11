@@ -7,6 +7,7 @@
     "equity",
     "medical_diversity",
     "clinical_groundedness",
-    "clinical_validity"
+    "clinical_validity",
+    "medical_interoperability"
   ]
 }

@@ -125,6 +125,30 @@ Interpretation: high score means basic medical fields are structurally coherent
 and source-consistent. Specialty-specific clinical rule packs should be added for
 stronger claims.
 
+## 8. Medical Interoperability
+
+Let `D_core = {person, visit_occurrence, condition_occurrence,
+procedure_occurrence, drug_exposure, measurement}`.
+
+```text
+omop_domain_coverage = |declared omop_domains intersect D_core| / |D_core|
+standard_vocabulary_rate = count(records with only standard vocabularies) /
+                            count(records with declared vocabularies)
+temporal_traceability = count(records with valid event date) /
+                        count(records with event date fields)
+relational_integrity = count(records with case_id and encounter/visit/source link) /
+                       count(records with relationship fields)
+medical_interoperability = mean(omop_domain_coverage,
+                                standard_vocabulary_rate,
+                                temporal_traceability,
+                                relational_integrity)
+```
+
+Interpretation: high score means a structured synthetic dataset is easy to map
+into OMOP-like observational analytics. This axis is `n/a` for datasets that do
+not expose structured interoperability fields; `n/a` is excluded from the
+overall score.
+
 ## Overall Score
 
 ```text

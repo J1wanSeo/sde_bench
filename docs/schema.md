@@ -41,6 +41,13 @@ JSONL is recommended for clinical text.
 | `diagnosis` | string | Primary diagnosis text |
 | `icd10_codes` | string/list | ICD-10 codes, separated by comma/semicolon/pipe if string |
 | `procedures` | string/list | Procedures or interventions |
+| `clinical_codes` | string/list | Native clinical codes when not limited to ICD-10 |
+| `omop_domains` | string/list | OMOP-style domains represented by the record |
+| `standard_vocabularies` | string/list | Declared vocabularies such as ICD-10, SNOMED CT, LOINC, RxNorm, CPT, HCPCS |
+| `encounter_id` | string | Visit/encounter identifier for relational integrity |
+| `encounter_start` | string | Encounter start date, preferably ISO `YYYY-MM-DD` |
+| `condition_start` | string | Condition start date, preferably ISO `YYYY-MM-DD` |
+| `procedure_date` | string | Procedure date, preferably ISO `YYYY-MM-DD` |
 | `acuity` | string | One of `routine`, `elective`, `urgent`, `emergency` |
 | `laterality` | string | One of `left`, `right`, `bilateral`, `none`, `midline`, `unknown` |
 | `claim` | string | Generated clinical statement or note |

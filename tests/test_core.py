@@ -9,6 +9,7 @@ from tempfile import TemporaryDirectory
 from sde_bench import benchmark, evaluate, load_config, load_records
 from sde_bench.adapters.kmuc import export_kmuc_records
 from sde_bench.adapters.medsynth import export_medsynth_records
+from sde_bench.adapters.synthea import export_synthea_records
 from sde_bench.adapters.synsum import export_synsum_records
 
 
@@ -130,6 +131,7 @@ class SdeBenchCoreTests(unittest.TestCase):
                 "medical_diversity",
                 "clinical_groundedness",
                 "clinical_validity",
+                "medical_interoperability",
             ],
         )
         self.assertGreater(report["axes"]["medical_fidelity"]["score"], 0.8)
@@ -172,6 +174,40 @@ class SdeBenchCoreTests(unittest.TestCase):
         self.assertEqual(metrics["acuity_validity"], 0.5)
         self.assertEqual(metrics["laterality_validity"], 0.5)
         self.assertEqual(metrics["age_validity"], 0.5)
+
+    def test_interoperability_axis_scores_omop_readiness(self) -> None:
+        report = evaluate(
+            real=[
+                {
+                    "case_id": "P1",
+                    "age": 41,
+                    "diagnosis": "Hypertension",
+                    "omop_domains": "person,visit_occurrence,condition_occurrence",
+                    "standard_vocabularies": "SNOMED-CT",
+                    "encounter_id": "E1",
+                    "condition_start": "2024-01-01",
+                }
+            ],
+            synthetic=[
+                {
+                    "case_id": "P2",
+                    "age": 43,
+                    "diagnosis": "Diabetes",
+                    "omop_domains": "person,visit_occurrence,condition_occurrence,procedure_occurrence",
+                    "standard_vocabularies": "SNOMED-CT,LOINC",
+                    "encounter_id": "E2",
+                    "condition_start": "2024-02-01",
+                    "procedure_date": "2024-02-02",
+                }
+            ],
+        )
+
+        metrics = report["axes"]["medical_interoperability"]["metrics"]
+        self.assertAlmostEqual(metrics["omop_domain_coverage"], 4 / 6)
+        self.assertAlmostEqual(metrics["standard_vocabulary_rate"], 1.0)
+        self.assertAlmostEqual(metrics["temporal_traceability"], 1.0)
+        self.assertAlmostEqual(metrics["relational_integrity"], 1.0)
+        self.assertAlmostEqual(report["axes"]["medical_interoperability"]["score"], (4 / 6 + 1 + 1 + 1) / 4)
 
     def test_benchmark_ranks_multiple_synthetic_datasets(self) -> None:
         real = [
@@ -325,6 +361,78 @@ class SdeBenchCoreTests(unittest.TestCase):
         self.assertEqual(exported["synthetic"][0]["age"], 40)
         self.assertEqual(exported["synthetic"][0]["evidence"], "[patient] I have cough.")
         self.assertEqual(exported["synthetic"][0]["source_id"], exported["source"][0]["source_id"])
+
+    def test_synthea_adapter_exports_patient_level_csv_records(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_csv(
+                root / "patients.csv",
+                [
+                    {
+                        "Id": "P1",
+                        "BIRTHDATE": "1980-01-01",
+                        "GENDER": "F",
+                        "RACE": "white",
+                        "ETHNICITY": "nonhispanic",
+                    },
+                    {
+                        "Id": "P2",
+                        "BIRTHDATE": "1975-06-01",
+                        "GENDER": "M",
+                        "RACE": "asian",
+                        "ETHNICITY": "hispanic",
+                    },
+                ],
+            )
+            write_csv(
+                root / "encounters.csv",
+                [
+                    {"Id": "E1", "START": "2020-01-01", "PATIENT": "P1", "CODE": "185345009", "DESCRIPTION": "Encounter"},
+                    {"Id": "E2", "START": "2021-01-01", "PATIENT": "P2", "CODE": "185345009", "DESCRIPTION": "Encounter"},
+                ],
+            )
+            write_csv(
+                root / "conditions.csv",
+                [
+                    {
+                        "START": "2020-01-01",
+                        "PATIENT": "P1",
+                        "ENCOUNTER": "E1",
+                        "CODE": "59621000",
+                        "DESCRIPTION": "Hypertension",
+                    },
+                    {
+                        "START": "2021-01-01",
+                        "PATIENT": "P2",
+                        "ENCOUNTER": "E2",
+                        "CODE": "44054006",
+                        "DESCRIPTION": "Diabetes mellitus",
+                    },
+                ],
+            )
+            write_csv(
+                root / "procedures.csv",
+                [
+                    {
+                        "DATE": "2021-01-02",
+                        "PATIENT": "P2",
+                        "ENCOUNTER": "E2",
+                        "CODE": "73761001",
+                        "DESCRIPTION": "Colonoscopy",
+                    }
+                ],
+            )
+
+            exported = export_synthea_records(root, split_fraction=0.5)
+
+        self.assertEqual(exported["reference"][0]["case_id"], "SYNTHEA-P1")
+        self.assertEqual(exported["synthetic"][0]["case_id"], "SYNTHEA-P2")
+        self.assertEqual(exported["synthetic"][0]["source_id"], exported["source"][0]["source_id"])
+        self.assertEqual(exported["synthetic"][0]["diagnosis"], "Diabetes mellitus")
+        self.assertIn("condition_occurrence", exported["synthetic"][0]["omop_domains"])
+        self.assertIn("procedure_occurrence", exported["synthetic"][0]["omop_domains"])
+        self.assertEqual(exported["synthetic"][0]["standard_vocabularies"], "SNOMED-CT")
+        self.assertEqual(exported["synthetic"][0]["encounter_id"], "E2")
 
 
 class SdeBenchCliTests(unittest.TestCase):
@@ -548,6 +656,49 @@ class SdeBenchCliTests(unittest.TestCase):
             self.assertEqual(proc.returncode, 0, proc.stderr)
             exported = load_records(out_dir / "synthetic.jsonl")
             self.assertEqual(exported[0]["icd10_codes"], "R05")
+            self.assertTrue((out_dir / "reference.jsonl").exists())
+            self.assertTrue((out_dir / "source.jsonl").exists())
+
+    def test_cli_exports_synthea_files(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            csv_dir = root / "synthea"
+            csv_dir.mkdir()
+            out_dir = root / "out"
+            write_csv(
+                csv_dir / "patients.csv",
+                [
+                    {"Id": "P1", "BIRTHDATE": "1980-01-01", "GENDER": "F", "RACE": "white", "ETHNICITY": "nonhispanic"},
+                    {"Id": "P2", "BIRTHDATE": "1975-06-01", "GENDER": "M", "RACE": "asian", "ETHNICITY": "hispanic"},
+                ],
+            )
+            write_csv(
+                csv_dir / "conditions.csv",
+                [
+                    {"START": "2020-01-01", "PATIENT": "P1", "ENCOUNTER": "E1", "CODE": "59621000", "DESCRIPTION": "Hypertension"},
+                    {"START": "2021-01-01", "PATIENT": "P2", "ENCOUNTER": "E2", "CODE": "44054006", "DESCRIPTION": "Diabetes mellitus"},
+                ],
+            )
+
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "sde_bench",
+                    "synthea-export",
+                    "--csv-dir",
+                    str(csv_dir),
+                    "--out-dir",
+                    str(out_dir),
+                ],
+                check=False,
+                text=True,
+                capture_output=True,
+            )
+
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            exported = load_records(out_dir / "synthetic.jsonl")
+            self.assertEqual(exported[0]["diagnosis"], "Diabetes mellitus")
             self.assertTrue((out_dir / "reference.jsonl").exists())
             self.assertTrue((out_dir / "source.jsonl").exists())
 
