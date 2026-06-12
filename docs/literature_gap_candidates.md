@@ -146,20 +146,20 @@ Legend:
 
 CSV companion: `docs/original_benchmark_axis_crosswalk.csv`.
 
-### 4.1 SDE-Bench Axis Definitions for Medical Synthetic Data
+### 4.1 의료 합성 데이터를 위한 SDE-Bench 축 정의
 
-| SDE-Bench Axis | What It Measures | Why It Matters for Medical Synthetic Data | Common Gap in Prior Original Benchmarks |
+| SDE-Bench 축 | 무엇을 보는가 | 의료 합성 데이터에서 왜 중요한가 | 기존 평가에서 빠지기 쉬운 지점 |
 |---|---|---|---|
-| Fidelity | Similarity between synthetic and reference distributions, including column-level and pairwise structure. | A synthetic cohort should resemble the source population before it is used for modeling, validation, or workflow simulation. | Broad realism checks may miss record-level clinical incoherence or source-supported factuality. |
-| Utility | Whether the synthetic data supports an intended downstream clinical task when labels or expected outputs exist. | Medical synthetic data is useful only if it preserves task-relevant signals for triage, retrieval, extraction, prediction, or training. | Original metrics are often strong for one native task but do not transfer to other clinical workflows. |
-| Privacy | Memorization and disclosure-risk screens such as exact duplication and nearest-reference similarity. | Patient-level health data are sensitive; synthetic generation must not simply reproduce identifiable or near-identifiable records. | Many dataset papers treat synthetic generation itself as privacy protection or use only dataset-specific disclosure checks. |
-| Equity | Preservation of sensitive-group distributions and target parity across subgroups. | Synthetic data can underrepresent subgroups or amplify biased target patterns, which can carry into clinical models. | Subgroup fairness is rarely reported as a primary benchmark axis in synthetic medical dataset papers. |
-| Diversity | Internal support coverage, entropy preservation, and non-repetition within the represented data space. | A dataset that is repetitive or mode-collapsed can inflate apparent utility while failing to cover clinically relevant variation. | Sample count or code count is often reported without directly measuring support preservation or collapse. |
-| Scope | Breadth across departments, diagnoses, procedures, demographics, scenarios, and portable task signals. | Medical reuse depends on whether a dataset covers multiple specialties and workflows, not only whether it is diverse inside one disease area. | Disease-specific or workflow-specific datasets can be clinically useful but still narrow in general medical scope. |
-| Groundedness | Whether generated clinical claims are linked to source evidence and supported by that evidence. | LLM/RAG-generated records can be fluent and task-useful while still hallucinating diagnoses, timelines, or clinical facts. | BLEU/ROUGE, extraction F1, realism, or task utility do not provide claim-level evidence support by themselves. |
-| Validity | Clinical and structural plausibility of individual records, including age, diagnosis, code format, procedure, acuity, laterality, department, and source consistency. | Distributional similarity can hide impossible or unsafe records; medical datasets need per-record clinical coherence checks. | Original evaluations often validate global distributions or task performance without explicit clinical-rule scoring. |
-| Interoperability | Readiness for healthcare data pipelines through standard domains, vocabularies, dates, and relational links. | Reusable medical synthetic data should be loadable into OMOP, FHIR, claims, or EHR-style analytics without extensive manual repair. | Text or task-specific datasets often do not measure schema readiness, standard vocabulary use, or relational integrity. |
-| Applicability | Which axes are measurable, skipped, label-missing, adapter-missing, or genuinely not applicable for a dataset. | Cross-dataset comparison is misleading if a high score is computed only over a narrow subset of measurable axes. | Single-dataset papers usually report their own feasible metrics and do not quantify cross-benchmark comparability. |
+| Fidelity (충실도) | 합성 데이터가 기준 데이터의 분포, 변수별 특성, 변수 간 관계를 얼마나 보존하는지 본다. | 합성 환자군이 실제 또는 기준 환자군과 너무 다르면 모델 학습, 검증, 시뮬레이션 결과를 신뢰하기 어렵다. | 전체 분포가 비슷해 보여도 개별 레코드의 의학적 모순이나 근거 없는 서술은 놓칠 수 있다. |
+| Utility (활용성) | 합성 데이터가 진단, 분류, 검색, 추출, 예측 같은 downstream clinical task에 실제로 도움이 되는지 본다. | 의료 데이터셋은 단순히 그럴듯한 것보다 임상 태스크에 필요한 신호를 보존해야 한다. | 기존 논문은 자기 데이터셋의 native task 성능은 잘 보이지만, 다른 임상 워크플로우로 일반화되는지는 약하다. |
+| Privacy (프라이버시) | 원본 환자나 레코드를 그대로 외우거나, 원본과 과도하게 가까운 샘플을 만드는지 본다. | 의료 데이터는 재식별과 민감정보 노출 위험이 크기 때문에 합성 데이터라도 privacy screen이 필요하다. | 합성 생성이라는 이유만으로 안전하다고 가정하거나, 데이터셋별 제한적인 disclosure check에 머무르는 경우가 많다. |
+| Equity (형평성) | 성별, 연령, 인종, 보험 유형, 질환군 등 subgroup의 분포와 target pattern이 왜곡되지 않았는지 본다. | 합성 데이터가 특정 집단을 과소대표하거나 편향을 증폭하면, 그 데이터로 학습한 의료 모델도 불공정해질 수 있다. | 전체 평균 성능이나 전체 분포만 보고 subgroup fairness를 별도 축으로 평가하지 않는 경우가 많다. |
+| Diversity (다양성) | 데이터 내부의 반복, mode collapse, 범주 coverage, entropy 보존 정도를 본다. | 반복적이고 좁은 합성 데이터는 겉보기 성능을 높일 수 있지만 실제 임상 variation을 충분히 반영하지 못한다. | 단순 샘플 수, 코드 수, 질환 수를 보고하지만 support 보존이나 collapse 여부를 직접 측정하지 않는 경우가 있다. |
+| Scope (범위) | 진료과, 질환, 처치, 인구통계, 시나리오, task signal이 얼마나 넓게 포함되는지 본다. | 범용 의료 합성 데이터셋이라면 특정 질환이나 단일 workflow 내부의 다양성뿐 아니라 여러 임상 영역으로 재사용 가능한지가 중요하다. | HIV, 호흡기, claims, dialogue-note처럼 유용하지만 좁은 데이터셋이 broad medical benchmark처럼 해석될 위험이 있다. |
+| Groundedness (근거성) | 생성된 clinical claim이 source evidence에 연결되고, 그 evidence로 실제 지지되는지 본다. | LLM/RAG 기반 합성 데이터는 문장이 자연스럽고 task 성능이 좋아도 진단, 시간관계, 처치 근거를 hallucinate할 수 있다. | BLEU/ROUGE, extraction F1, realism, utility만으로는 claim-level evidence support를 보장하지 못한다. |
+| Validity (임상 타당성) | 나이, 진단, ICD code, 처치, 중증도, laterality, 진료과, source consistency 등 개별 레코드가 의학적으로 말이 되는지 본다. | 분포가 맞아도 개별 환자 기록이 임상적으로 불가능하거나 구조적으로 틀리면 의료 데이터셋으로 쓰기 어렵다. | 기존 평가는 전역 분포나 task 성능을 보면서 clinical-rule 기반의 record-level validity를 생략하기 쉽다. |
+| Interoperability (상호운용성) | OMOP, FHIR, claims, EHR-style 분석에 필요한 표준 domain, vocabulary, 날짜, 관계형 link가 있는지 본다. | 의료 데이터는 연구용 표뿐 아니라 실제 분석 파이프라인과 표준 용어체계에 연결될 수 있어야 재사용성이 높다. | 텍스트 중심 또는 task-specific 데이터셋은 schema readiness, standard vocabulary, relational integrity를 평가하지 않는 경우가 많다. |
+| Applicability (적용가능성) | 각 axis가 해당 데이터셋에서 실제 측정 가능한지, label/schema/adapter 부족으로 빠지는지, 또는 본질적으로 해당 없는지를 명시한다. | 여러 데이터셋을 비교할 때 일부 축만 측정된 높은 점수와 모든 축에서 측정된 점수를 같은 의미로 해석하면 안 된다. | 단일 데이터셋 논문은 자신에게 가능한 metric만 보고하며, cross-dataset comparability 자체를 수치화하지 않는 경우가 많다. |
 
 ### 4.2 Original Benchmark Coverage Table
 
