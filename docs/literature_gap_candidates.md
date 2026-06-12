@@ -63,12 +63,81 @@ The current claim should be built from three evidence groups:
 | Reproducibility of evaluation | Synthea background highlights incomplete documentation as a barrier to validation and reuse; prior dataset metrics vary by task. | Paper-reported metrics alone are not independent reproduction. | Track `computed`, `paper_reported`, `requires_adapter`, `requires_labels`, and `not_applicable`; report recomputed-vs-reported evidence split. | Medium |
 | Domain-specific clinical rule coverage | Synthea uses disease modules and care maps; SimSUM uses expert Bayesian structure. | Generic syntactic validity does not prove specialty-specific correctness. | Extension: rule-pack coverage by specialty, contraindication checks, disease-procedure consistency, guideline consistency. | Medium |
 
-## 3. Highest-Value SDE-Bench Justification Candidates
+## 3. Quantitative Prior-Paper Coverage Coding
+
+This section converts the qualitative literature gaps into a conservative
+coverage score. The goal is not to rank prior papers. The goal is to show which
+medical synthetic-data evidence dimensions are repeatedly under-covered by
+dataset-specific evaluations.
+
+Coding rule:
+
+```text
+Direct (D) = 1.0
+Partial or proxy (P) = 0.5
+Missing or not reported as an evaluation axis (M) = 0.0
+
+weighted_coverage(axis) =
+    sum(score(paper, axis) for paper in reviewed_dataset_papers)
+    / count(reviewed_dataset_papers)
+
+gap_score(axis) = 1 - weighted_coverage(axis)
+```
+
+Reviewed dataset/self-evaluation sources:
+
+- MedSynth
+- SimSUM
+- Synthea
+- Health Gym
+- CMS DE-SynPUF
+
+CSV companion: `docs/literature_gap_coverage.csv`.
+
+### 3.1 Dataset-Paper Coverage Matrix
+
+| Evidence Dimension | MedSynth | SimSUM | Synthea | Health Gym | DE-SynPUF | Weighted Coverage | Gap Score |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Task utility | D | D | P | D | P | 0.80 | 0.20 |
+| Statistical fidelity / realism | P | P | P | D | P | 0.60 | 0.40 |
+| Privacy / disclosure risk | M | M | P | D | P | 0.40 | 0.60 |
+| Interoperability / format readiness | M | P | D | P | D | 0.60 | 0.40 |
+| Clinical validity | P | P | P | P | M | 0.40 | 0.60 |
+| Source groundedness / factuality | M | D | M | M | M | 0.20 | 0.80 |
+| Clinical scope breadth | P | M | P | M | P | 0.30 | 0.70 |
+| Equity / subgroup representativeness | M | M | M | M | M | 0.00 | 1.00 |
+| Applicability / missingness coverage | M | M | M | M | M | 0.00 | 1.00 |
+
+Interpretation:
+
+- Prior dataset papers usually provide strong evidence for their native task or
+  format.
+- The largest repeat gaps are equity/subgroup representativeness,
+  applicability coverage, source groundedness/factuality, clinical scope
+  breadth, clinical validity, and privacy threat-model specificity.
+- These high-gap dimensions justify SDE-Bench's medical-domain additions more
+  strongly than a generic fidelity/utility/privacy benchmark alone.
+
+### 3.2 Conservative Coding Rationale
+
+| Evidence Dimension | Coding Rationale |
+|---|---|
+| Task utility | Direct when the paper reports downstream generation, extraction, RL action, or software-development utility; partial when utility is implied for nonclinical development or training. |
+| Statistical fidelity / realism | Direct only when real-vs-synthetic distributions, moments, or correlations are explicitly validated; partial when realism is supported by simulation design, disease distributions, or public statistics but not a full validation metric. |
+| Privacy / disclosure risk | Direct when disclosure risk is quantitatively assessed; partial when privacy protection is argued from fully synthetic generation or claims-public-use design without a full attack metric. |
+| Interoperability / format readiness | Direct when standard formats or claims-compatible schemas are central; partial when records are structured but not mapped to healthcare interoperability standards. |
+| Clinical validity | Direct would require explicit clinical-rule or structural-validity scoring; current reviewed dataset papers are at most partial, using care maps, expert Bayesian structures, or plausibility-oriented design. |
+| Source groundedness / factuality | Direct when generated text is explicitly linked to structured evidence or annotated spans; missing when fluency, task utility, or format validity is reported without claim-level support checks. |
+| Clinical scope breadth | Partial when a dataset reports broad code, condition, or claims coverage; missing when it is intentionally disease-, task-, or workflow-specific without a breadth metric. |
+| Equity / subgroup representativeness | Direct would require protected-attribute subgroup preservation or downstream fairness metrics; none of the reviewed dataset self-evaluations make this a primary benchmark axis. |
+| Applicability / missingness coverage | Direct would require reporting which common benchmark axes could or could not be measured for each dataset; reviewed papers are single-dataset evaluations and do not report cross-dataset applicability coverage. |
+
+## 4. Highest-Value SDE-Bench Justification Candidates
 
 These are the strongest axes to emphasize in a JMIR-style paper because they are
 both literature-motivated and quantifiable in the current SDE-Bench direction.
 
-### 3.1 Applicability Coverage
+### 4.1 Applicability Coverage
 
 Problem:
 
@@ -95,7 +164,7 @@ Manuscript use:
 > We report performance and coverage separately so a high score over a narrow
 > subset of axes is not interpreted as broad medical benchmark superiority.
 
-### 3.2 Clinical Validity
+### 4.2 Clinical Validity
 
 Problem:
 
@@ -122,7 +191,7 @@ Manuscript use:
 > We separate clinical validity from statistical fidelity because distributional
 > similarity does not guarantee medically coherent individual records.
 
-### 3.3 Clinical Groundedness
+### 4.3 Clinical Groundedness
 
 Problem:
 
@@ -149,7 +218,7 @@ Manuscript use:
 > claims remain traceable to source evidence, rather than treating fluent
 > clinical text as sufficient.
 
-### 3.4 Clinical Scope Breadth
+### 4.4 Clinical Scope Breadth
 
 Problem:
 
@@ -174,7 +243,7 @@ Manuscript use:
 > but high-quality longitudinal dataset is not mistaken for a broad
 > multi-specialty clinical benchmark.
 
-### 3.5 Equity / Subgroup Representativeness
+### 4.5 Equity / Subgroup Representativeness
 
 Problem:
 
@@ -201,7 +270,7 @@ Manuscript use:
 > automatically bias-free and global fidelity is insufficient for clinical
 > fairness claims.
 
-## 4. Candidate Contribution Statement
+## 5. Candidate Contribution Statement
 
 Recommended wording:
 
@@ -225,7 +294,7 @@ Korean version:
 > 못한다. SDE-Bench는 이 누락된 의료 도메인 요구사항을 별도의 평가축으로
 > 정의하고, 측정 가능한 축과 적용 불가능한 축을 분리하여 보고한다.
 
-## 5. Source Notes
+## 6. Source Notes
 
 - Yan et al., "A Multifaceted Benchmarking of Synthetic Electronic Health Record
   Generation Models": https://arxiv.org/abs/2208.01230

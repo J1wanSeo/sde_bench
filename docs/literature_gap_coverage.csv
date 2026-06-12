@@ -1,0 +1,10 @@
+evidence_dimension,medsynth,simsum,synthea,health_gym,de_synpuf,weighted_coverage,gap_score,priority
+Task utility,D,D,P,D,P,0.80,0.20,Lower gap
+Statistical fidelity / realism,P,P,P,D,P,0.60,0.40,Moderate gap
+Privacy / disclosure risk,M,M,P,D,P,0.40,0.60,High gap
+Interoperability / format readiness,M,P,D,P,D,0.60,0.40,Moderate gap
+Clinical validity,P,P,P,P,M,0.40,0.60,High gap
+Source groundedness / factuality,M,D,M,M,M,0.20,0.80,Very high gap
+Clinical scope breadth,P,M,P,M,P,0.30,0.70,High gap
+Equity / subgroup representativeness,M,M,M,M,M,0.00,1.00,Very high gap
+Applicability / missingness coverage,M,M,M,M,M,0.00,1.00,Very high gap
