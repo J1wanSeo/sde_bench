@@ -146,6 +146,23 @@ Legend:
 
 CSV companion: `docs/original_benchmark_axis_crosswalk.csv`.
 
+### 4.1 SDE-Bench Axis Definitions for Medical Synthetic Data
+
+| SDE-Bench Axis | What It Measures | Why It Matters for Medical Synthetic Data | Common Gap in Prior Original Benchmarks |
+|---|---|---|---|
+| Fidelity | Similarity between synthetic and reference distributions, including column-level and pairwise structure. | A synthetic cohort should resemble the source population before it is used for modeling, validation, or workflow simulation. | Broad realism checks may miss record-level clinical incoherence or source-supported factuality. |
+| Utility | Whether the synthetic data supports an intended downstream clinical task when labels or expected outputs exist. | Medical synthetic data is useful only if it preserves task-relevant signals for triage, retrieval, extraction, prediction, or training. | Original metrics are often strong for one native task but do not transfer to other clinical workflows. |
+| Privacy | Memorization and disclosure-risk screens such as exact duplication and nearest-reference similarity. | Patient-level health data are sensitive; synthetic generation must not simply reproduce identifiable or near-identifiable records. | Many dataset papers treat synthetic generation itself as privacy protection or use only dataset-specific disclosure checks. |
+| Equity | Preservation of sensitive-group distributions and target parity across subgroups. | Synthetic data can underrepresent subgroups or amplify biased target patterns, which can carry into clinical models. | Subgroup fairness is rarely reported as a primary benchmark axis in synthetic medical dataset papers. |
+| Diversity | Internal support coverage, entropy preservation, and non-repetition within the represented data space. | A dataset that is repetitive or mode-collapsed can inflate apparent utility while failing to cover clinically relevant variation. | Sample count or code count is often reported without directly measuring support preservation or collapse. |
+| Scope | Breadth across departments, diagnoses, procedures, demographics, scenarios, and portable task signals. | Medical reuse depends on whether a dataset covers multiple specialties and workflows, not only whether it is diverse inside one disease area. | Disease-specific or workflow-specific datasets can be clinically useful but still narrow in general medical scope. |
+| Groundedness | Whether generated clinical claims are linked to source evidence and supported by that evidence. | LLM/RAG-generated records can be fluent and task-useful while still hallucinating diagnoses, timelines, or clinical facts. | BLEU/ROUGE, extraction F1, realism, or task utility do not provide claim-level evidence support by themselves. |
+| Validity | Clinical and structural plausibility of individual records, including age, diagnosis, code format, procedure, acuity, laterality, department, and source consistency. | Distributional similarity can hide impossible or unsafe records; medical datasets need per-record clinical coherence checks. | Original evaluations often validate global distributions or task performance without explicit clinical-rule scoring. |
+| Interoperability | Readiness for healthcare data pipelines through standard domains, vocabularies, dates, and relational links. | Reusable medical synthetic data should be loadable into OMOP, FHIR, claims, or EHR-style analytics without extensive manual repair. | Text or task-specific datasets often do not measure schema readiness, standard vocabulary use, or relational integrity. |
+| Applicability | Which axes are measurable, skipped, label-missing, adapter-missing, or genuinely not applicable for a dataset. | Cross-dataset comparison is misleading if a high score is computed only over a narrow subset of measurable axes. | Single-dataset papers usually report their own feasible metrics and do not quantify cross-benchmark comparability. |
+
+### 4.2 Original Benchmark Coverage Table
+
 | Existing Dataset / Benchmark Used | Fidelity | Utility | Privacy | Equity | Diversity | Scope | Groundedness | Validity | Interop | Applicability |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | MedSynth Dial-2-Note / Note-2-Dial utility | P | O | X | X | P | P | X | P | X | X |
