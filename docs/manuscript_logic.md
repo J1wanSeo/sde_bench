@@ -3,6 +3,9 @@
 This document defines the defensible manuscript logic for presenting SDE-Bench
 as a medical-domain benchmark for synthetic healthcare datasets.
 
+For the literature-backed weakness candidates that justify the SDE-Bench axes,
+see `docs/literature_gap_candidates.md`.
+
 ## 1. Core Position
 
 The paper should not claim that every prior dataset was evaluated under every
