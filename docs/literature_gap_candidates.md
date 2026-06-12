@@ -132,12 +132,62 @@ Interpretation:
 | Equity / subgroup representativeness | Direct would require protected-attribute subgroup preservation or downstream fairness metrics; none of the reviewed dataset self-evaluations make this a primary benchmark axis. |
 | Applicability / missingness coverage | Direct would require reporting which common benchmark axes could or could not be measured for each dataset; reviewed papers are single-dataset evaluations and do not report cross-dataset applicability coverage. |
 
-## 4. Highest-Value SDE-Bench Justification Candidates
+## 4. Original Benchmark to SDE-Bench Axis Crosswalk
+
+This table asks a different question from Section 3: for each benchmark or
+evaluation protocol used by existing synthetic medical dataset papers, which
+SDE-Bench axes does it cover?
+
+Legend:
+
+- `O`: directly covered by the original benchmark.
+- `P`: partially or indirectly covered.
+- `X`: not covered as an explicit benchmark dimension.
+
+CSV companion: `docs/original_benchmark_axis_crosswalk.csv`.
+
+| Existing Dataset / Benchmark Used | Fidelity | Utility | Privacy | Equity | Diversity | Scope | Groundedness | Validity | Interop | Applicability |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| MedSynth Dial-2-Note / Note-2-Dial utility | P | O | X | X | P | P | X | P | X | X |
+| SimSUM symptom extraction F1 / span annotations | P | O | X | X | P | X | O | P | P | X |
+| Synthea standards-based EHR availability | P | P | P | X | P | P | X | P | O | X |
+| Health Gym realism, disclosure risk, RL utility | O | O | O | X | O | X | X | P | P | X |
+| CMS DE-SynPUF claims format compatibility | P | P | P | X | P | P | X | X | O | X |
+
+Axis coverage score:
+
+```text
+O = 1.0
+P = 0.5
+X = 0.0
+
+benchmark_axis_coverage(row) =
+    sum(axis scores for row) / count(SDE-Bench axes)
+```
+
+| Existing Dataset / Benchmark Used | Covered Axes Score | Missing Axes Score | Main Missing SDE-Bench Axes |
+|---|---:|---:|---|
+| MedSynth Dial-2-Note / Note-2-Dial utility | 0.30 | 0.70 | privacy, equity, groundedness, interoperability, applicability |
+| SimSUM symptom extraction F1 / span annotations | 0.40 | 0.60 | privacy, equity, scope breadth, applicability |
+| Synthea standards-based EHR availability | 0.40 | 0.60 | equity, groundedness, applicability |
+| Health Gym realism, disclosure risk, RL utility | 0.50 | 0.50 | equity, scope breadth, groundedness, applicability |
+| CMS DE-SynPUF claims format compatibility | 0.35 | 0.65 | equity, groundedness, clinical validity, applicability |
+
+Interpretation:
+
+- Existing benchmarks cover their own intended contribution well.
+- None of the reviewed original benchmarks covers all SDE-Bench axes.
+- The most consistently missing axes are equity, source groundedness, and
+  applicability coverage.
+- This gives a quantitative rationale for SDE-Bench as a broader medical-domain
+  benchmark rather than just another original-metric aggregation.
+
+## 5. Highest-Value SDE-Bench Justification Candidates
 
 These are the strongest axes to emphasize in a JMIR-style paper because they are
 both literature-motivated and quantifiable in the current SDE-Bench direction.
 
-### 4.1 Applicability Coverage
+### 5.1 Applicability Coverage
 
 Problem:
 
@@ -164,7 +214,7 @@ Manuscript use:
 > We report performance and coverage separately so a high score over a narrow
 > subset of axes is not interpreted as broad medical benchmark superiority.
 
-### 4.2 Clinical Validity
+### 5.2 Clinical Validity
 
 Problem:
 
@@ -191,7 +241,7 @@ Manuscript use:
 > We separate clinical validity from statistical fidelity because distributional
 > similarity does not guarantee medically coherent individual records.
 
-### 4.3 Clinical Groundedness
+### 5.3 Clinical Groundedness
 
 Problem:
 
@@ -218,7 +268,7 @@ Manuscript use:
 > claims remain traceable to source evidence, rather than treating fluent
 > clinical text as sufficient.
 
-### 4.4 Clinical Scope Breadth
+### 5.4 Clinical Scope Breadth
 
 Problem:
 
@@ -243,7 +293,7 @@ Manuscript use:
 > but high-quality longitudinal dataset is not mistaken for a broad
 > multi-specialty clinical benchmark.
 
-### 4.5 Equity / Subgroup Representativeness
+### 5.5 Equity / Subgroup Representativeness
 
 Problem:
 
@@ -270,7 +320,7 @@ Manuscript use:
 > automatically bias-free and global fidelity is insufficient for clinical
 > fairness claims.
 
-## 5. Candidate Contribution Statement
+## 6. Candidate Contribution Statement
 
 Recommended wording:
 
@@ -294,7 +344,7 @@ Korean version:
 > 못한다. SDE-Bench는 이 누락된 의료 도메인 요구사항을 별도의 평가축으로
 > 정의하고, 측정 가능한 축과 적용 불가능한 축을 분리하여 보고한다.
 
-## 6. Source Notes
+## 7. Source Notes
 
 - Yan et al., "A Multifaceted Benchmarking of Synthetic Electronic Health Record
   Generation Models": https://arxiv.org/abs/2208.01230

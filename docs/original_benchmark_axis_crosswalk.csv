@@ -1,0 +1,6 @@
+existing_dataset_benchmark,fidelity,utility,privacy,equity,diversity,scope,groundedness,validity,interop,applicability,covered_axes_score,missing_axes_score,main_missing_axes
+MedSynth Dial-2-Note / Note-2-Dial utility,P,O,X,X,P,P,X,P,X,X,0.30,0.70,"privacy; equity; groundedness; interoperability; applicability"
+SimSUM symptom extraction F1 / span annotations,P,O,X,X,P,X,O,P,P,X,0.40,0.60,"privacy; equity; scope breadth; applicability"
+Synthea standards-based EHR availability,P,P,P,X,P,P,X,P,O,X,0.40,0.60,"equity; groundedness; applicability"
+Health Gym realism disclosure risk RL utility,O,O,O,X,O,X,X,P,P,X,0.50,0.50,"equity; scope breadth; groundedness; applicability"
+CMS DE-SynPUF claims format compatibility,P,P,P,X,P,P,X,X,O,X,0.35,0.65,"equity; groundedness; clinical validity; applicability"
